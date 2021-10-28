@@ -15,9 +15,9 @@ disp('--------------------------------------------------------------------------
 
 %% Insert Model here
 addpath([pwd,'/examples']);
+addpath([userpath,'\casadi-matlabR2014b-v3.3.0']);
 
-settings.model='InvertedPendulum'; % see the folder "examples" for details
-
+settings.model='InvertedPendulum_GP'; % see the folder "examples" for details
 run(settings.model);
 
 %%
@@ -29,7 +29,18 @@ mu_x=SX.sym('mu_x',nbx,1);                  % the i th multiplier for bounds on 
 mu_g=SX.sym('mu_g',nc,1);                  % the i th multiplier for bounds on controls
 muN_g=SX.sym('muN_g',ncN,1);                 % the N th multiplier for inequality constraints
 
-%% Generate some functions
+
+%% GP generation 
+
+if settings.gp_generation
+    gp_fun = Function('gp_fun', {states,controls,params,alg},{psi_bar+SX.zeros(nx,1)});
+    gp_jac_fun = Function('gp_jac_fun',{states,controls,params,alg},{gp_grad_x+SX.zeros(nx,nx),gp_grad_u+SX.zeros(nx,nu)});
+else
+    gp_fun = Function('gp_fun', {states,controls,params,alg},{SX.zeros(nx,1)});
+    gp_jac_fun = Function('gp_jac_fun',{states,controls,params,alg},{SX.zeros(nx,nx),SX.zeros(nx,nu)});
+end
+
+%% Generate main functions
 
 f_fun  = Function('f_fun', {states,controls,params,alg}, {SX.zeros(nx,1)+x_dot},{'states','controls','params','alg'},{'xdot'});
 
@@ -74,6 +85,14 @@ if nz==0
     
     adjW = SX.zeros(nx+nu,1) + jtimes(x_dot, [states;controls], lambda, true);
     adj_ERK_fun = Function('adj_ERK_fun',{states,controls,params,lambda,alg},{adjW});
+
+    if settings.gp_generation
+        adjGP = SX.zeros(nx+nu,1) + jtimes(psi_bar, [states;controls], lambda, true);
+    else
+        adjGP = SX.zeros(nx+nu,1);
+    end
+    adj_GP_fun = Function('adj_GP_fun',{states,controls,params,lambda,alg},{adjGP});
+
 else
     vdeFun = Function('vdeFun',{states,controls,params,Sx,Su,alg},{0,0});
     adj_ERK_fun = Function('adj_ERK_fun',{states,controls,params,lambda,alg},{0});
@@ -157,6 +176,24 @@ adjN_fun = Function('adjN_fun',{states,params,refN, QN, mu_x,muN_g},{dobjN, adj_
 
 generate=input('Would you like to generate the source code?(y/n)','s');
 
+OS_MAC = 0;
+OS_LINUX = 0;
+OS_WIN = 0;
+
+if ismac
+    OS_MAC = 1;
+elseif isunix
+    OS_LINUX = 1;
+elseif ispc
+    OS_WIN = 1;
+else
+    disp('    Platform not supported')
+end
+
+if OS_LINUX 
+gcc_version=input('Would you like to compile the 6.3 release of gcc?(y/n)','s');
+end
+
 if strcmp(generate,'y')
 
     disp('                           ');
@@ -170,6 +207,11 @@ if strcmp(generate,'y')
     g_fun.generate('g_fun.c',opts);
     path_con_fun.generate('path_con_fun.c',opts);
     path_con_N_fun.generate('path_con_N_fun.c',opts);
+    gp_fun.generate('gp_fun.c',opts);
+%     gp_jac_x_fun.generate('gp_jac_x_fun.c',opts);
+%     gp_jac_u_fun.generate('gp_jac_u_fun.c',opts);
+    gp_jac_fun.generate('gp_jac_fun.c',opts);
+    adj_GP_fun.generate('adj_GP_fun.c',opts);
    
     opts = struct('main',false,'mex',false,'with_header',true);
     cd ../mex_core
@@ -201,7 +243,13 @@ if strcmp(generate,'y')
         P.add(JN_fun);
         P.add(Ci_fun);
         P.add(CN_fun);
-              
+        % GP
+        P.add(gp_fun);
+%         P.add(gp_jac_x_fun);
+%         P.add(gp_jac_u_fun);
+        P.add(adj_GP_fun);
+        P.add(gp_jac_fun);
+        
         P.generate();
     cd ..
 
@@ -215,19 +263,6 @@ if strcmp(compile,'y')
     
     disp('    Compiling...');
     
-    OS_MAC = 0;
-    OS_LINUX = 0;
-    OS_WIN = 0;
-
-    if ismac
-        OS_MAC = 1;
-    elseif isunix
-        OS_LINUX = 1;
-    elseif ispc
-        OS_WIN = 1;
-    else
-        disp('    Platform not supported')
-    end
     
     options = '-largeArrayDims';
 
@@ -235,7 +270,11 @@ if strcmp(compile,'y')
        CC_FLAGS='CXXFLAGS="$CXXFLAGS -Wall"'; % use MinGW not VS studio
     end
     if OS_LINUX 
-	    CC_FLAGS = 'GCC="/usr/bin/gcc"';
+        if strcmp(gcc_version, 'y')
+            CC_FLAGS = 'GCC="/usr/bin/gcc-6.3"';
+        else
+            CC_FLAGS = 'GCC="/usr/bin/gcc"';
+        end
     end
     if OS_MAC
        CC_FLAGS = '';
@@ -250,6 +289,12 @@ if strcmp(compile,'y')
     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'h_fun.c');
     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'f_fun.c');
     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'g_fun.c');
+    % GP
+    mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'gp_fun.c');
+%     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'gp_jac_x_fun.c');
+%     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'gp_jac_u_fun.c');
+    mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'gp_jac_fun.c');
+    mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'adj_GP_fun.c');
 
     cd ../mex_core
     Compile_Mex;
@@ -270,13 +315,19 @@ settings.nu = nu;
 settings.nz = nz;
 settings.ny = ny;    
 settings.nyN= nyN;    
-settings.np = np;   
+settings.npODE = npODE;   
 settings.nc = nc;
 settings.ncN = ncN;
 settings.nbx = nbx;
 settings.nbu = nbu;
 settings.nbx_idx = nbx_idx;
 settings.nbu_idx = nbu_idx;
+
+settings.yGP = yGP; 
+settings.xGP = xGP; 
+settings.npGP = npGP; 
+
+settings.np = np;   
 
 cd data
 save('settings','settings');

@@ -11,8 +11,11 @@ sim_opts* sim_opts_create(const mxArray *mem)
     opts->nu = mxGetScalar( mxGetField(mem, 0, "nu") );
     opts->nz = mxGetScalar( mxGetField(mem, 0, "nz") );
     opts->num_stages = mxGetScalar( mxGetField(mem, 0, "num_stages") );
-    opts->num_steps = mxGetScalar( mxGetField(mem, 0, "num_steps") );
+    opts->num_steps = mxGetScalar( mxGetField(mem, 0, "num_steps") ); 
     opts->h = mxGetScalar( mxGetField(mem, 0, "h") );
+    opts->gp_flag = mxGetScalar( mxGetField(mem, 0, "gp_flag") );
+    opts->gp_status_flag = 1;
+//     opts->only_gp_flag = mxGetScalar( mxGetField(mem, 0, "only_gp_flag") );
     
 	return opts;
 }

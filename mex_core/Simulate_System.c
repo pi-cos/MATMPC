@@ -4,6 +4,7 @@
 
 #include "sim.h"
 #include "erk.h"
+#include "erk_gp.h"
 #include "irk_ode.h"
 #include "irk_dae.h"
 
@@ -11,6 +12,7 @@ static sim_opts *opts = NULL;
 static sim_in *in = NULL;
 static sim_out *out = NULL;
 static sim_erk_workspace *erk_workspace = NULL;
+static sim_erk_gp_workspace *erk_gp_workspace = NULL;
 static sim_irk_ode_workspace *irk_ode_workspace = NULL;
 static sim_irk_dae_workspace *irk_dae_workspace = NULL;
 static bool mem_alloc = false;
@@ -18,6 +20,8 @@ static bool mem_alloc = false;
 void exitFcn(){
     if (erk_workspace!=NULL)
         sim_erk_workspace_free(opts, erk_workspace);
+    if (erk_gp_workspace!=NULL)
+        sim_erk_gp_workspace_free(opts, erk_gp_workspace);
     if (irk_ode_workspace!=NULL)
         sim_irk_ode_workspace_free(opts, irk_ode_workspace);
     if (irk_dae_workspace!=NULL)
@@ -66,6 +70,10 @@ mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
                 irk_dae_workspace = sim_irk_dae_workspace_create(opts);               
                 sim_irk_dae_workspace_init(opts, prhs[4], irk_dae_workspace);
                 break;
+            case 4:                         
+                erk_gp_workspace = sim_erk_gp_workspace_create(opts);               
+                sim_erk_gp_workspace_init(opts, prhs[4], erk_gp_workspace);                
+                break;
             default:
                 mexErrMsgTxt("Please choose a supported integrator");
                 break;
@@ -101,6 +109,14 @@ mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
             out->xn = x_out;
             out->zn = z_out;
             sim_irk_dae(in, out, opts, irk_dae_workspace);
+            break;
+        case 4:
+            in->x = x;
+            in->u = u;
+            in->p = od;
+            out->xn = x_out;
+            opts->gp_status_flag = false; // no gp info in output
+            sim_erk_gp(in, out, opts, erk_gp_workspace);
             break;
         default:
             mexErrMsgTxt("Please choose a supported integrator");

@@ -384,6 +384,28 @@ function [mem] = InitMemory(settings, opt, input)
             mem.Su = zeros(nx,nu);
             mem.newton_iter = 5;
             mem.JFK = mem.h*[mem.B_tab(1)*eye(nx,nx), zeros(nx,nz), mem.B_tab(2)*eye(nx,nx), zeros(nx,nz), mem.B_tab(3)*eye(nx,nx), zeros(nx,nz)];
+            
+        case 'ERK4-GP'
+            
+            if ~settings.gp_generation
+                error('GP must be generated for ERK4-GP integration!')
+            end
+            
+            mem.sim_method = 4;
+            mem.A_tab=[0, 0, 0, 0;
+                0.5, 0, 0, 0;
+                0, 0.5, 0, 0;
+                0, 0, 1, 0];
+            mem.B_tab=[1/6, 1/3, 1/3, 1/6];
+            mem.num_steps = 1;
+            mem.num_stages = 4;
+            mem.h=Ts_st/mem.num_steps;
+            mem.nx = nx;
+            mem.nu = nu;
+            mem.nz = nz;
+            mem.Sx = eye(nx);
+            mem.Su = zeros(nx,nu);
+
         otherwise 
             error('Please choose a correct integrator');       
     end
@@ -400,6 +422,9 @@ function [mem] = InitMemory(settings, opt, input)
     if strcmp(opt.RTI,'yes')
         mem.sqp_maxit=1;         % use RTI
     else       
+        if opt.info_flag
+            error('Info needed for SQP!')
+        end
         mem.sqp_maxit = 50;      % maximum number of iterations for each sampling instant
     end
     mem.kkt_lim = 1e-2;          % tolerance on optimality
@@ -490,6 +515,33 @@ function [mem] = InitMemory(settings, opt, input)
     mem.R = zeros(nu,nu*N);
                       
     mem.iter=1;
+        
+    
+    %% GP
+    
+    if strcmp(settings.mpc_model,'grey_box') || strcmp(settings.mpc_model,'black_box')
+        
+        if ~strcmp(opt.integrator,'ERK4-GP')
+            error('Please use ERK4-GP integrator for GP.')
+        end
+        
+        mem.gp_flag = 1;
+        
+        mem.x_gp  = repmat(zeros(nx,1),1,N);
+        mem.x_ode = repmat(zeros(nx,1),1,N);
+        
+        mem.A_gp = zeros(nx,nx*N);
+        mem.B_gp = zeros(nx,nu*N);
+        
+        mem.A_ode = zeros(nx,nx*N);
+        mem.B_ode = zeros(nx,nu*N);
+        
+    else
+        
+        mem.gp_flag = 0;
+    end
+    
+%     mem.only_gp_flag = 0;
     
      %% for CMON-RTI
      

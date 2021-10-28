@@ -13,14 +13,19 @@
 \usepackage{booktabs,array}
 \usepackage{hyperref}
 \usepackage{longtable}
+\usepackage[cal=boondox]{mathalfa}
 
 \newcommand{\software}[1]{{\tt#1}}
 \newcommand{\norm}[1]{\lVert#1\rVert}
 \newcommand{\alert}[1]{{\textit{#1}}}
 
 \begin{document}
-	\title{\software{MATMPC} User Manual}
-	\author{Yutao Chen\\ Email: \href{mailto:chenyutao890704@gmail.com}{chenyutao890704@gmail.com}}
+	\title{\software{LbMATMPC} User Manual}
+	\author{\textit{MATMPC Toolbox by} Yutao Chen\\ email: \href{mailto:chenyutao890704@gmail.com}{chenyutao890704@gmail.com}\\
+	\textit{GP integration by} Enrico Picotti\\ email: 
+	\href{mailto:enrico.picotti@gmail.com}{enrico.picotti@gmail.com} \\
+	\textit{GPR-PY library by} Alberto Dalla Libera\\ email: 
+	\href{mailto:alberto.dallalibera.1@gmail.com}{alberto.dallalibera.1@gmail.com}}
 	
 	\maketitle
 	
@@ -42,19 +47,19 @@
 \subsection{Advanced functionality installation}
 
 \subsubsection{Linear Algebra Library}
-By default, \software{MATMPC} employs MATLAB built-in linear algebra (LA) library \software{lapack} and \software{blas} from INTEL MKL. For the full condensing routine, \software{MATMPC} also supports using \software{BLASFEO} \cite{frison2018blasfeo}. Note that, in WINDOWS, installing \software{BLASFEO} requires to install MinGW for WINDOWS (not for MATLAB), which is described in detail in the ``HPIPM-tutorial''.
+By default, \software{MATMPC} employs MATLAB built-in linear algebra (LA) library \software{lapack} and \software{blas} from INTEL MKL. For the full condensing routine, \software{MATMPC} also supports using \software{BLASFEO} \cite{frison2018blasfeo}. For how to install \software{BLASFEO}, please visit \href{https://github.com/giaf/blasfeo}{here}. Note that, in WINDOWS, installing \software{BLASFEO} requires to install MinGW for WINDOWS (not for MATLAB), which is described in detail in the ``HPIPM tutorial''.
 
 \subsubsection{QP Solver}
 \software{MATMPC} comes with MATLAB built-in QP solver \emph{quadprog} but other QP solvers can also be used. By default, \software{MATMPC} provides compiled binaries of \software{qpOASES} \cite{ferreau2014qpoases} and \software{OSQP} \cite{stellato2018osqp} both for WINDOWS and LINUX. If users want to compile \software{qpOASES} themselves, please visit \href{https://projects.coin-or.org/qpOASES/wiki/QpoasesInstallation}{here} and install its MATLAB interface only. If users want to compile \software{OSQP}, please visit \href{https://osqp.org/}{here} and install its MATLAB interface only.
 
-\software{MATMPC} provides more QP solvers, including \software{HPIPM} and \software{IPOPT} \cite{wachter2006implementation}, both using interior point method (IPM) for solving sparse QP problems. In order to use \software{HPIPM}, either for sparse or partially condensed QP, users should run \emph{/mex\_core/compile\_hpipm.m} to obtain compatible MEX functions. Such compilation requires to install \software{BLASFEO} and \software{HPIPM}. Details are given in the ``HPIPM-tutorial''. The \software{IPOPT} binary is delivered by \software{OPTI Toolbox} at \href{https://www.inverseproblem.co.nz/OPTI/}{this site}. Hence, it is required to install \software{OPTI Toolbox} first. Note that \software{OPTI Toolbox} is only compatible with WINDOWS system.
+\software{MATMPC} provides more QP solvers, including \software{HPIPM} and \software{IPOPT} \cite{wachter2006implementation}, both using interior point method (IPM) for solving sparse QP problems. In order to use \software{HPIPM}, either for sparse or partially condensed QP, users should run \emph{/mex\_core/compile\_hpipm.m} to obtain compatible MEX functions. Such compilation requires to install \software{BLASFEO} and \software{HPIPM}. For how to obtain \software{HPIPM}, please visit \href{https://github.com/giaf/hpipm}{here}. The \software{IPOPT} binary is delivered by \software{OPTI Toolbox} at \href{https://www.inverseproblem.co.nz/OPTI/}{this site}. Hence, it is required to install \software{OPTI Toolbox} first. Note that \software{OPTI Toolbox} is only compatible with WINDOWS system.
 
 \section{Data Structure}
 
 \subsection{Problem Description}
 
 \subsubsection{NLP}
-In \software{MATMPC}, we solve the following nonlinear programming (NLP) problem:
+In \software{MATMPC} \cite{chen2019matmpc}, we solve the following nonlinear programming (NLP) problem:
 \begin{equation}\label{NLP}
 	\begin{aligned}
 	\min_{x_k,u_k} \,&\frac{1}{2}\sum_{k=0}^{N-1} d(h(x_k,u_k)-h_{ref}^k)_{W_k}+\frac{1}{2}d_N(h_N(x_N)-h_{ref}^N)_{W_N}\\
@@ -173,6 +178,48 @@ m(\mathbf{w}^i+\alpha^i\Delta \mathbf{w}^i;\mu^i)\leq m(\mathbf{w}^i;\mu^i)+\eta
 \end{equation}
 where $\mathcal{D}(m(\mathbf{w}^i;\mu^i);\Delta \mathbf{w}^i)$ is the directional derivative of $m$ in the direction of $\Delta \mathbf{w}^i$. We adopt Algorithm 18.3 (\cite{nocedal2006numerical}, p. 545) to choose $\mu^i$ and compute $\alpha^i$ at each iteration.
 
+\subsection{GP integration}
+
+The Gaussian Process (GP) is defined in discrete time and trained as to model the difference between the NMPC one-step-ahead velocity prediction and the actual system state $\hat{\dot{q}}_1 - \dot{q}_1$ \cite{picotti2021lbmatmpc}.
+
+The discrete dynamics model results
+\begin{equation}
+    x_{k+1} = \phi_k(x_k,u_k) + \psi_k(x_k,u_k)
+\end{equation}
+where $\psi_k(x_k,u_k)$ is the mean of the GP, computed as
+\begin{equation}
+    \psi_k(x_k,u_k) = \mathbf{k_*^T} (K+\sigma_n^2 \mathbb{I})^{-1} \mathbf{y}
+\end{equation}
+where $\mathbf{k_*^T}$ is the vector of covariances between the test point and the training points, $K = K(X,X)$ is the \textit{(squared exponential)} covariance matrix of the test points, $\sigma_n^2$ is the noise variance and $\mathbf{y}$ are the observations \cite[p. 17]{rasmussen2003gaussian}.
+
+Note that the one-step-ahead velocity prediction $\hat{\dot{q}}_1$ can be the result of the NMPC computations, hence the evolution of the linearized internal model.
+
+\subsubsection{NLP}
+The dynamics equality constraint in NLP \eqref{NLP} is modified as follows
+\begin{equation}
+    0 = x_{k+1} - \left[\phi_k(x_k,u_k) + \psi_k(x_k,u_k)\right].
+\end{equation}
+
+\subsubsection{QP}
+The dynamics equality constraint in the QP \eqref{QP} is modified as follows
+\begin{equation}
+    \Delta x_{k+1}= (A_{k,ODE}^i+A_{k,GP}^i) \Delta x_{k}+ (B_{k,ODE}^i+B_{k,GP}^i) \Delta u_{k} +a_{k,ODE-GP}^i,
+\end{equation}
+where
+\begin{equation}
+\begin{aligned}
+&A_{k,ODE}^i=\frac{\partial \phi_k}{\partial x_k}, \quad B_{k,ODE}^i=\frac{\partial \phi_k}{\partial u_k},\\
+&A_{k,GP}^i=\frac{\partial \psi_k}{\partial x_k}, \quad B_{k,GP}^i=\frac{\partial \psi_k}{\partial u_k},\\
+&a_{k,ODE-GP}^i = \phi(x_k^i,u_k^i) + \psi_k(x_k,u_k) -x_{k+1}^i.
+\end{aligned}
+\end{equation}
+
+\subsubsection{KKT conditions}
+In KKT conditions computation, the equality residual (i.e. the quantity related to equality constraint $\frac{\partial \phi(z^*)^T}{\partial z} \lambda^*$, where $z = [x,u]$) is updated as
+\begin{equation}
+    \left[\frac{\partial \phi(z^*)^T}{\partial z} + \frac{\partial \psi(z^*)^T}{\partial z} \right] \lambda^*.
+\end{equation}
+
 \subsection{Data in \software{MATMPC}}
 There are four main data structs in \software{MATMPC}, namely \alert{settings}, \alert{opts}, \alert{input} and \alert{mem}. There are two features regarding these structs:
 \begin{enumerate}
@@ -208,17 +255,17 @@ There are four main data structs in \software{MATMPC}, namely \alert{settings}, 
 	\hline
 		hessian          & Gauss\_Newton, Generalized\_Gauss\_Newton
 		\\
-		integrator       & ERK4, IRK3, IRK3-DAE EKR4-CASADI                                                                                                                                      \\
+		integrator       & ERK4, IRK3, EKR4-CASADI                                                                                                                                      \\
 		hessian          & gauss\_newton                                                                                                                                                \\
 		condensing       & default\_full, no, blasfeo\_full, partial\_condensing                                                                                                        \\ \hline
 		\multirow{3}{*}{qpsolver} & qpoases, qpoases\_mb, quadprog\_dense, hpipm\_sparse        \\
 		& hpipm\_pcond, ipopt\_dense, ipopt\_sparse                   \\
 		& ipopt\_partial\_sparse, osqp\_sparse, osqp\_partial\_sparse \\ \hline
 		hotstart         & yes, no (only for qpoases)                                                                                                                                                     \\
-		shifting         & yes, no (naive one interval backward shifting)     \\                                                                                                                                                 		                                                                                                                                                     
-		ref\_type        & 0-time invariant, 1-time varying(no preview), 2-time varying(preview)                                                                                                                                                     \\
-		nonuniform\_grid & 0-deactivate, 1-activate\\ 
-		RTI              & yes, no \\ \hline        		
+		shifting         & yes, no (naive one interval backward shifting)                                                                                                                                                      \\
+		lin\_obj         & yes, no (whether objective functions $h,h_N$ are linear in states and controls)                                                                                                                                                     \\
+		ref\_type        & 0-time invariant, 1-time varying(no preview), 2-time varying (preview)                                                                                                                                                     \\
+		nonuniform\_grid & 0-deactivate, 1-activate\\ \hline        		
 	\caption{variables in \alert{opts} struct}
 	\label{table:opts}                                                        
 \end{longtable}
@@ -291,6 +338,30 @@ The \alert{mem} struct contains a lot of fields, which are partially selected he
 	\label{table:mem}
 \end{longtable}
 
+
+
+\subsection{Data in \software{LbMATMPC}}
+The following options are added for the GP inclusion
+\begin{itemize}
+    \item \textit{opt.integrator = ERK4-GP}
+    \item \textit{opt.mpc\_model} for choosing grey- or black-box model
+\end{itemize}
+and the following data are added in \alert{mem} structure
+\begin{longtable}{l|l}
+	\hline
+	$gp\_flag$ & flag for gp activation   \\
+	$x\_gp$ & results of the integration from GP, i.e. $\psi_k(x_k,u_k)$ $\in\mathbb{R}^{n_x\times (N+1)}$ \\
+	$x\_ode$ & results of the integration from ODE, i.e. $\phi_k(x_k,u_k)$ $\in\mathbb{R}^{n_x\times (N+1)}$ \\
+	$A\_gp$ & state transition matrix for GP component $\in\mathbb{R}^{n_x\times N n_x}$ \\
+	$A\_ode$ & state transition matrix for ODE component $\in\mathbb{R}^{n_x\times N n_x}$ \\
+	$B\_gp$ & control transition matrix for GP component $\in\mathbb{R}^{n_x\times N n_u}$ \\
+	$B\_ode$ & control transition matrix for ODE component $\in\mathbb{R}^{n_x\times N n_u}$ \\
+	\hline
+	\caption{added variables in \alert{mem} struct for GP}
+	\label{table:mem-GP}
+\end{longtable}
+
+
 \section{How to use}
 In this section, a brief introduction of how to run a simulation is given.
 
@@ -305,23 +376,144 @@ In this section, a brief introduction of how to run a simulation is given.
 \subsection{Simulink Simulation}
 \begin{enumerate}
 	\item For the first step, users should refer to \software{MATMPC} examples for how to write their models. Double check the dimensions of all data are correct.
-	\item In ``Model\_Generation.m'', choose your model by setting ``settings.model=...''. Run this script.
+	\item In ``Model\_Generation.m'', choose your model by setting ``settings.model=...''. Change the number of integration steps per sample interval and shooting interval, respectively, by setting ``s=...''. Run this script.
 	\item Once model codes are generated, open ``Initialization\_Simulink.m''. Change a variety of options that may fit your application. Also configure the initial conditions. Run this script.
 	\item Open ``MATMPC\_SIMULINK''. Run the simulation for the ``Inverted Pendulum'' example. Get an idea of how the simulation works.
 	\item Re-write or create a new Simulink simulation for your application.
 \end{enumerate}
 
+\subsection{GP integration}\label{subsec:gpint}
+The given implementation allows to use the squared exponential covariance function by providing \cite[p. 16-19]{rasmussen2003gaussian}:
+\begin{itemize}
+    \item training points $X$;
+    \item $\alpha = L^T\backslash(L\backslash\mathbf{y})$, where $L = \text{\textit{cholesky}}(K+\sigma_n^2 \mathbb{I})$;
+    \item lengthscales of the squared exponential covariance function $\mathbf{l}$.
+\end{itemize} 
+
+Note that it is possible to use any covariance function, providing the definition of the mean of the GP in the model script.
+
+\subsubsection{Data collection}
+\begin{enumerate}
+	\item For the first step, users should use \software{MATMPC} example \textit{Inverted\_Pendulum} for generate the data.
+	\item In \textit{Model\_Generation.m}, choose the model by setting \textit{settings.model = `Inverted\_Pendulum'}. Run this script.
+	\item Once model codes are generated, open \textit{Simulation.m}. Use option \textit{opt.gp\_data\_save} to generate nominal model data, specifying if are needed for grey-box or black-box modelling.
+\end{enumerate}
+
+\subsubsection{GP Regression}
+
+In order to run the GPR procedure, the following software is nedded:
+\begin{enumerate}
+    \item check \textit{Python} compatibility version with your MATLAB version and install \textit{Python} from \texttt{https://www.python.org/downloads/} using Windows installer. Set the check for adding python to PATH.%at\\ \texttt{https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/support/sysreq/files/python-compatibility.pdf}
+    \item install \textit{PyTorch} from Command Prompt, following the instructions at \texttt{https://pytorch.org/}, choosing Package \textit{Pip}
+    \item install \textit{matplot} following the instructions \textit{Installing an official release} at\\ \texttt{https://matplotlib.org/stable/users/installing.html}
+    \item install \textit{Pandas} following the instructions \textit{Installing from PyPI} method at\\ \texttt{https://pandas.pydata.org/pandas-docs/stable/getting\_started/install.html}
+\end{enumerate}
+
+Once all the previous steps are concluded, run the script \textit{gp\_regression $>$ python\_setting} (only once per MATLAB session) indicating the executable location of Python on your PC.
+
+Define the wanted GPR settings in script \textit{gp\_regression $>$ GPR} and run it. Results of the GPR should placed in the chosen folder. 
+
+Note that, the \textit{GP\_ID.py} script can also be launched directly form the Command Window with the same options.
+
+\subsubsection{Simulation}
+
+In \textit{Simulation.m} set \textit{opt.integrator = ERK4-GP} and \textit{opt.mpc\_model} as grey- or black-box.
+
+\paragraph{Grey-box model}
+To test the grey-box modelling, follow the procedure
+\begin{itemize}
+    \item set the GP parameters in \textit{InitData.m}, i.e. the training points $X$, and GPR results $\alpha, l$ by \textit{.csv} files
+    \item run \textit{Simulation.m} with \textit{opt.mpc\_model = `grey-box'}
+\end{itemize}
+
+\paragraph{Black-box model}
+To test the black-box modelling, follow the procedure
+\begin{itemize}
+    \item set the GP parameters in \textit{InitData.m}, i.e. the training points $X$, and GPR results $\alpha, l$ by \textit{.csv} files
+    \item run \textit{Simulation.m} with \textit{opt.mpc\_model = `black-box'}
+\end{itemize}
+
 \section{Advanced Functions}
 Currently, \software{MATMPC} supports two advanced and unique functions:
 \begin{enumerate}
 	\item The curvature-like measure of nonlinearity (CMoN) NMPC schemes \cite{chen2017fast, chen2018adaptive}.
-	\item Sparse discretization. 
+	\item The input move blocking NMPC scheme (to be published). 
 \end{enumerate}
 
-\subsection{Input move blocking}
-Sparse discretization can reduce the computational burden of solving an NLP online by reducing the number of decision variables. In MATMPC, there are two ways of doing this: 1) input move blocking and 2) non-uniform grid. The difference of these to ways are shown in \cite{chen2019efficient}, Fig.~1. As compared in \cite{chen2019efficient}, we strongly recommend to use input move blocking, rather than the non-uniform grid strategy.
+For more illustrations and advanced functionalities, please contact us via email.
 
-In MATMPC, users can activate the input move blocking by choosing the QP solver as ``qpoases\_mb''. As a result, MATMPC will automatically use Algorithm 1 and 2 in \cite{chen2019efficient} to condense the NLP. By using this QP solver, users must provide their own move blocking structure in ``Init\_Memory.m'', at line 443. In particular, ``mem.$r$'' is the number of blocks. ``mem.index\_T'' is the indexing vector, where each element denotes the starting index of each input block. Note that this vector always starts from $0$ hence is of length $r+1$. Also note that, as remarked in \cite{chen2019efficient}, an inpropoer move blocking structure may lead to infeasibility and instability. Hence, the tuning of ``mem.index\_T'' is often a trial-and-error procedure and has no theoretical guarantees in most cases.
+\appendix
+\section{Model definition}
+The model is usually derived from a physical description, and the state can be divided as
+\begin{equation}
+    {x}_k = [{q}_k, {\dot{q}}_k]^T,
+\end{equation}
+where ${q}_k \in \mathbb{R}^{n_q}$ and ${\dot{q}}_k \in \mathbb{R}^{n_q}$ are the position and velocities of the physical system, respectively. Training the GP $\hat{\psi}(x_k, u_k)$ on the velocity prediction errors, the overall model is given by 
+\begin{equation}\label{eq:overall_dyn}
+\begin{aligned}
+     {x}_{k+1} &=  {\phi}( {x}_k, {u}_k) &&+ \quad \bar{ {\psi}}( {x}_k, {u}_k)\\
+    \begin{bmatrix}
+     {q}_{k+1} \\
+     {\dot{q}}_{k+1}
+    \end{bmatrix} &= 
+    \begin{bmatrix}
+     {\phi}_q( {x}_k, {u}_k) \\
+     {\phi}_{\dot{q}}( {x}_k, {u}_k)
+    \end{bmatrix} 
+    &&+ \quad
+    \begin{bmatrix}
+     {\hat{\psi}}( {x}_k, {u}_k) \cdot \frac{T_s}{2} \\
+     {\hat{\psi}}( {x}_k, {u}_k)
+    \end{bmatrix} 
+    \end{aligned}
+\end{equation}
+since, supposing constant acceleration in the time interval $ T_s$, 
+\begin{equation}
+    \int_{ T_s} a(t) dt = a  T_s = \bar{\phi}_{\dot{q}}( {x}_k, {u}_k) + {\hat{\psi}}( {x}_k, {u}_k),
+\end{equation}
+where $\bar{\phi}_{\dot{q}}( {x}_k, {u}_k) = {\phi}_{\dot{q}}( {x}_k, {u}_k) - \dot{q}_k$, and hence the discrete velocity evolution is given by
+\begin{equation}
+    \dot{q}_{k+1} = \dot{q}_k + \int_{ T_s} a(t) dt = \dot{q}_k + a  T_s = \dot{q}_k + \bar{\phi}_{\dot{q}}( {x}_k, {u}_k) + {\hat{\psi}}( {x}_k, {u}_k)
+\end{equation}
+and the state evolution by
+\begin{equation}
+\begin{aligned}
+    {q}_{k+1} &= q_k + \dot{q}_k  T_s + \int \int_{ T_s} a(t) dt = q_k + \dot{q}_k  T_s + a \frac{ T_s^2}{2} \\
+    &= q_k + \dot{q}_k  T_s + a  T_s \frac{ T_s}{2} = \underbrace{q_k + \dot{q}_k  T_s + (\bar{\phi}_{\dot{q}}( {x}_k, {u}_k)}_{= \phi_q(x,u)} + {\hat{\psi}}( {x}_k, {u}_k)) \frac{ T_s}{2}
+    \end{aligned}
+\end{equation}
+
+\section{QP definition}
+NLP is
+\begin{equation}
+    \min ||h-h_R||^2_W = \min d(q)
+\end{equation}
+where $d(\cdot) = ||\cdot||^2_W$ and $q = h-h_R$, and using the Taylor expansion
+\begin{equation}
+    d(x+\Delta x) \simeq d(x) + \frac{\partial d}{\partial x}\Delta x + \frac{\partial ^2 d}{\partial x^2} \Delta x^2 + o(\Delta x ^2)
+\end{equation}
+the QP can be written as 
+\begin{equation}
+\min \frac{1}{2} \Delta x ^T Q \Delta x + g \Delta x
+\end{equation}
+where $g = \frac{\partial d}{\partial x}$ and $Q$ is the Hessian approximated by Gauss-Newton method, i.e., for quadratic functions, e.g. for $d(q(x)) = q(x)^2$
+\begin{equation}
+\begin{aligned}
+    & \frac{\partial d}{\partial x} = 2 q(x) \frac{\partial q}{\partial x}\\
+    & \frac{\partial^2 d}{\partial x^2} = 2 \frac{\partial q}{\partial x}^T \frac{\partial q}{\partial x} {\color{blue}+ q(x) \frac{\partial^2 q}{\partial x^2}}
+\end{aligned}
+\end{equation}
+neglecting \textcolor{blue}{the second order derivative}. Given $q = h-h_R$, the partial derivative results
+\begin{equation}
+    \frac{\partial q}{\partial x} = \frac{\partial h}{\partial x} - \underbrace{\frac{\partial h_R}{\partial x}}_{=0} = \frac{\partial h}{\partial x}
+\end{equation}
+hence the Hessian for diagonal weight matrix can be approximated by 
+\begin{equation}
+    Q = \frac{\partial (\sqrt{W_d}\ h)}{\partial x} ^T \frac{\partial (\sqrt{W_d} \ h)}{\partial x}
+\end{equation}
+where $W_d$ is the diagonal of W.
+
+
 
 \bibliographystyle{abbrv}
 \bibliography{ref}

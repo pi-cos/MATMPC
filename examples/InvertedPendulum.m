@@ -17,7 +17,7 @@ nu=1;  % No. of controls
 nz=0;  % No. of algebraic states
 ny=5; % No. of outputs
 nyN=4; % No. of outputs at the terminal point
-np=0; % No. of model parameters
+np=4; % No. of model parameters
 nc=0; % No. of general constraints
 ncN=0; % No. of general constraints at the terminal point
 nbx = 1; % No. of bounds on states
@@ -44,9 +44,12 @@ auxN     = SX.sym('auxN',nyN,1);    % auxilary variable
 
 %% Dynamics
 
-M = 1; 
-m = 0.1;
-l = 0.8; 
+M = params(1);%1; 
+m = params(2);%0.1;
+l = params(3);%0.8; 
+
+ode_flag = params(4);
+
 g = 9.81;
 
 p=states(1);
@@ -60,7 +63,7 @@ b=-m*l*cos(theta)*sin(theta)*omega^2+u*cos(theta)+(M+m)*g*sin(theta);
 c=M+m-m*(cos(theta))^2;
 
 % explicit ODE RHS
-x_dot=[v;omega;a/c;b/(l*c)];  
+x_dot=[v;omega;a/c;b/(l*c)]*ode_flag;
  
 % algebraic function
 z_fun = [];                   
@@ -89,3 +92,7 @@ general_con_N = [];
 %% NMPC discretizing time length [s]
 
 Ts_st = 0.025; % shooting interval time
+
+%% GP definitions
+
+settings.gp_generation = 1;

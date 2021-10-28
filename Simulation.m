@@ -59,17 +59,25 @@ N2 = N/5;
 settings.N2 = N2;    % No. of horizon length after partial condensing (N2=1 means full condensing)
 
 r = 10;
-settings.r = r;      % No. of input blocks (go to InitMemory.m, line 441 to configure)
+settings.r = r;      % No. of input blocks (go to InitMemory.m, line 418 to configure)
 
 opt.hessian         = 'Gauss_Newton';  % 'Gauss_Newton', 'Generalized_Gauss_Newton'
-opt.integrator      = 'ERK4'; % 'ERK4','IRK3','IRK3-DAE'
-opt.condensing      = 'default_full';  %'default_full','no','blasfeo_full(require blasfeo installed)','partial_condensing'
-opt.qpsolver        = 'qpoases'; 
+opt.integrator      = 'ERK4-GP'; % 'ERK4','IRK3','IRK3-DAE', 'ERK4-GP'
+opt.condensing      = 'no';  %'default_full','no','blasfeo_full(require blasfeo installed)','partial_condensing'
+opt.qpsolver        = 'hpipm_sparse'; 
 opt.hotstart        = 'no'; %'yes','no' (only for qpoases, use 'no' for nonlinear systems)
 opt.shifting        = 'no'; % 'yes','no'
 opt.ref_type        = 0; % 0-time invariant, 1-time varying(no preview), 2-time varying (preview)
-opt.nonuniform_grid = 0; % if use non-uniform grid discretization (go to InitMemory.m, line 459 to configure)
+opt.nonuniform_grid = 0; % if use non-uniform grid discretization (go to InitMemory.m, line 436 to configure)
 opt.RTI             = 'yes'; % if use Real-time Iteration
+
+opt.info_flag       = 0; % compute the equality residual (computationally expensive with GP - not useful in RTI)
+opt.mpc_model       = 'white_box_nom'; % model to be used in the QP generation % 'white_box_nom','white_box_corr','grey_box', 'black_box' 
+opt.gp_data_save    = 0; % save data for GP (only using white-box nominal model)
+if opt.gp_data_save
+    opt.save_target     = 'black_box'; % target for GPR (only if gp_data_save is active) % 'grey_box', 'black_box'
+end
+
 %% available qpsolver
 
 %'qpoases' (condensing is needed)
@@ -86,7 +94,13 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 %'qpalm_sparse'(set opt.condensing='no')
 
 %% Initialize Data (all users have to do this)
+
+settings.mpc_model = opt.mpc_model;   
+
 if opt.nonuniform_grid
+    if strcmp(opt.mpc_model,'grey_box') || strcmp(opt.mpc_model,'black_box')
+        error('Non-uniform grid not implemented for GP models yet.')
+    end
     [input, data] = InitData_ngrid(settings);
     N = r;
     settings.N = N;
@@ -101,9 +115,9 @@ mem = InitMemory(settings, opt, input);
 %% Simulation (start your simulation...)
 
 mem.iter = 1; time = 0.0;
-Tf = 4;  % simulation time
+Tf = 10;  % simulation time
 state_sim= input.x0';
-controls_MPC = input.u0';
+controls_MPC = [];%input.u0';
 y_sim = [];
 constraints = [];
 CPT = [];
@@ -111,6 +125,7 @@ ref_traj = [];
 KKT = [];
 OBJ=[];
 numIT=[];
+one_step_pred = [];
 
 while time(end) < Tf
         
@@ -132,6 +147,10 @@ while time(end) < Tf
     input.x0 = state_sim(end,:)';
     
     % call the NMPC solver 
+    input_x = input.x(:,:);
+    if strcmp(opt.mpc_model,'grey_box') || strcmp(opt.mpc_model,'black_box')
+        clear mex; mem.gp_flag = 1; 
+    end
     [output, mem] = mpc_nmpcsolver(input, settings, mem, opt);
         
     % obtain the solution and update the data
@@ -175,10 +194,17 @@ while time(end) < Tf
     sim_input.x = state_sim(end,:).';
     sim_input.u = output.u(:,1);
     sim_input.z = input.z(:,1);
-    sim_input.p = input.od(:,1);
+    sim_input.p = input.od(:,1);% -> [1;0.1;0.8]
+    sim_input.p(1:settings.npODE) = [1;0.1;0.5;1];
 
+    if strcmp(opt.mpc_model,'grey_box') || strcmp(opt.mpc_model,'black_box')
+        clear mex; mem.gp_flag = 0;
+    end
     [xf, zf] = Simulate_System(sim_input.x, sim_input.u, sim_input.z, sim_input.p, mem, settings);
     xf = full(xf);
+    
+    % Collect predictions
+    one_step_pred = [one_step_pred;output.x(:,2)'];
     
     % Collect outputs
     y_sim = [y_sim; full(h_fun('h_fun', xf, sim_input.u, sim_input.p))'];  
@@ -202,17 +228,38 @@ while time(end) < Tf
     time = [time nextTime];   
 end
 
-%%
+%% concluded
+
 if strcmp(opt.qpsolver, 'qpoases')
     qpOASES_sequence( 'c', mem.warm_start);
 end
+
 % if strcmp(opt.qpsolver, 'qpalm')
 %     mem.qpalm_solver.delete();
 % end
 clear mex;
 
 %% draw pictures (optional)
+
 disp(['Average CPT: ', num2str(mean(CPT(2:end,:),1)) ]);
 disp(['Maximum CPT: ', num2str(max(CPT(2:end,:))) ]);
 
 Draw;
+
+%% save data for GP
+
+if opt.gp_data_save
+    if strcmp(opt.mpc_model,'white_box_nom')
+        addpath('gp_regression')
+        name_csv = [opt.save_target,'_ip_sim'];
+        save_gp_data
+    else
+        error('Data must be saved with nominal model.')
+    end
+end
+
+%% save data for plots
+
+save(['data\sim_',num2str(opt.mpc_model)],'time','one_step_pred','state_sim','controls_MPC')
+
+    

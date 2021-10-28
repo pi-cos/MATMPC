@@ -3,6 +3,7 @@
 
 #include "sim.h"
 #include "erk.h"
+#include "erk_gp.h"
 #include "irk_ode.h"
 #include "irk_dae.h"
 #include "casadi_wrapper.h"
@@ -20,6 +21,7 @@ static sim_opts *opts = NULL;
 static sim_in *in = NULL;
 static sim_out *out = NULL;
 static sim_erk_workspace *erk_workspace = NULL;
+static sim_erk_gp_workspace *erk_gp_workspace = NULL;
 static sim_irk_ode_workspace *irk_ode_workspace = NULL;
 static sim_irk_dae_workspace *irk_dae_workspace = NULL;
 static bool mem_alloc = false;
@@ -32,6 +34,8 @@ void exitFcn(){
     }
     if (erk_workspace!=NULL)
         sim_erk_workspace_free(opts, erk_workspace);
+    if (erk_gp_workspace!=NULL)
+        sim_erk_gp_workspace_free(opts, erk_gp_workspace);
     if (irk_ode_workspace!=NULL)
         sim_irk_ode_workspace_free(opts, irk_ode_workspace);
     if (irk_dae_workspace!=NULL)
@@ -47,7 +51,7 @@ void exitFcn(){
 double eval_cons_res(double *x, double *u, double *od, double *z, double *x0, double *lb, double *ub, double *lc, double *uc,
                    double *lbx, double *ubx, double *lbu, double *ubu, size_t nx, size_t nu, size_t nz, size_t nc, size_t ncN,
                    size_t N, size_t np, size_t nbx, double *nbx_idx, double *eq_res_vec, int sim_method, sim_opts *opts, sim_in *in, sim_out *out,
-                   sim_erk_workspace *erk_workspace, sim_irk_ode_workspace *irk_ode_workspace, sim_irk_dae_workspace *irk_dae_workspace)
+                   sim_erk_workspace *erk_workspace, sim_irk_ode_workspace *irk_ode_workspace, sim_irk_dae_workspace *irk_dae_workspace, sim_erk_gp_workspace *erk_gp_workspace)
 {
     int i=0,j=0;
     
@@ -98,6 +102,14 @@ double eval_cons_res(double *x, double *u, double *od, double *z, double *x0, do
                 out->xn = eq_res_vec+(i+1)*nx;
                 out->zn = zn;
                 sim_irk_dae(in, out, opts, irk_dae_workspace);
+                break;
+            case 4:               
+                in->x = x+i*nx;
+                in->u = u+i*nu;
+                in->p = od+i*np;
+                out->xn = eq_res_vec+(i+1)*nx;
+                opts->gp_status_flag = false; // no gp info in output
+                sim_erk_gp(in, out, opts, erk_gp_workspace);
                 break;
             default :
                 mexErrMsgTxt("Please choose a supported integrator");
@@ -363,6 +375,15 @@ mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
                 irk_dae_workspace = sim_irk_dae_workspace_create(opts);               
                 sim_irk_dae_workspace_init(opts, prhs[0], irk_dae_workspace);
                 break;
+            case 4:
+                opts = sim_opts_create(prhs[0]);
+                opts->forw_sens_flag = false;
+                opts->adj_sens_flag = false;
+                in = sim_in_create(opts);              
+                out = sim_out_create(opts);                
+                erk_gp_workspace = sim_erk_gp_workspace_create(opts);               
+                sim_erk_gp_workspace_init(opts, prhs[0], erk_gp_workspace);  
+                break;
             default:
                 mexErrMsgTxt("Please choose a supported integrator");
                 break;
@@ -383,7 +404,7 @@ mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
         cons_res = eval_cons_res(x, u, od, z, x0, lb, ub, lc, uc,
                                  lbx, ubx, lbu, ubu, nx, nu, nz, nc, ncN,
                                  N, np, nbx, nbx_idx, eq_res_vec, sim_method, opts, in, out,
-                                 erk_workspace, irk_ode_workspace, irk_dae_workspace);
+                                 erk_workspace, irk_ode_workspace, irk_dae_workspace, erk_gp_workspace);
               
         pd = eval_curv(Q, S, R, dx, du, nx, nu, N);
         grad = eval_grad(gx, gu, dx, du, nx, nu, N);
@@ -415,7 +436,7 @@ mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
             cons_res = eval_cons_res(x_new, u_new, od, z, x0, lb, ub, lc, uc,
                                      lbx, ubx, lbu, ubu, nx, nu, nz, nc, ncN,
                                      N, np, nbx, nbx_idx, eq_res_vec, sim_method, opts, in, out,
-                                     erk_workspace, irk_ode_workspace, irk_dae_workspace);
+                                     erk_workspace, irk_ode_workspace, irk_dae_workspace, erk_gp_workspace);
                         
             obj_new = eval_obj(x_new, u_new, od, y, yN, W, WN, nx, nu, np, ny, N);
             obj_new += mu_merit[0]*cons_res;

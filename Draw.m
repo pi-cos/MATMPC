@@ -9,24 +9,64 @@ green=[0 205 102]/255;
 % start generating pictures
 switch settings.model
     
-    case 'InvertedPendulum'
+    case {'InvertedPendulum','InvertedPendulum_GP'}
         
         figure(1);
         subplot(321)
+        hold on
+        grid on
         plot(time,state_sim(:,1));
+        plot([time(1:end-1)', time(2:end)']',[state_sim(1:end-1,1),one_step_pred(:,1)]','--')
+        legend('sim','one-step pred')
         title('p');
         subplot(322)
+        hold on
+        grid on
         plot(time,state_sim(:,2)*180/pi);
+        plot([time(1:end-1)', time(2:end)']',[state_sim(1:end-1,2),one_step_pred(:,2)]'*180/pi,'--')
+        legend('sim','one-step pred')
         title('\theta');
         subplot(323)
+        hold on
+        grid on
         plot(time,state_sim(:,3));
+        plot([time(1:end-1)', time(2:end)']',[state_sim(1:end-1,3),one_step_pred(:,3)]','--')
+        legend('sim','one-step pred')
         title('v');
         subplot(324)
+        hold on
+        grid on
         plot(time,state_sim(:,4)*180/pi);
+        plot([time(1:end-1)', time(2:end)']',[state_sim(1:end-1,4),one_step_pred(:,4)]'*180/pi,'--')
+        legend('sim','one-step pred')
         title('\omega');
         subplot(3,2,[5 6]);
         title('F');
-        stairs(time,controls_MPC(:,1));
+        hold on
+        grid on
+        stairs(time(1:end-1),controls_MPC(:,1));
+        
+        figure(2);
+        subplot(221)
+        hold on
+        grid on
+        plot(time(2:end),state_sim(2:end,1)-one_step_pred(:,1));
+        title('difference sim vs pred - p');
+        subplot(222)
+        hold on
+        grid on
+        plot(time(2:end),state_sim(2:end,2)-one_step_pred(:,2));
+        title('difference sim vs pred - \theta');
+        subplot(223)
+        hold on
+        grid on
+        plot(time(2:end),state_sim(2:end,3)-one_step_pred(:,3));
+        title('difference sim vs pred - v');
+        subplot(224)
+        hold on
+        grid on
+        plot(time(2:end),state_sim(2:end,4)-one_step_pred(:,4));
+        title('difference sim vs pred - \omega');
         
     case 'ChainofMasses_Lin'
         figure(1);

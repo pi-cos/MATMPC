@@ -7,9 +7,6 @@ The tool supports fixed step (explicit/implicit) Runge-Kutta (RK) integrator for
 
 **The most unique feature of MATMPC is that it does not require to install any external libraries. The users need not to understand how to make, compile and link any library. Except for external QP solvers, all algorithmic routines are written directly using MATLAB C API and can be compiled into independent MEX functions using compilers that belong to GCC class (e.g. GCC, MinGW and Clang). MATMPC employs MATLAB built-in linear algebra library provided by Intel MKL. Therefore, MATMPC is able to provide compatible runtime performance as other libraries written directly in C/C++.**
 
-The mathematics and parameter tuning of MATMPC is explained at 
-[matmpc-docs.readthedocs.io/en/latest/](https://matmpc-docs.readthedocs.io/en/latest/ "https://matmpc-docs.readthedocs.io/en/latest/")
-
 ### Windows:
 
 Please install Matlab supported MinGW compiler at https://www.mathworks.com/matlabcentral/fileexchange/52848-matlab-support-for-mingw-w64-c-c-compiler
@@ -18,7 +15,11 @@ Please install Matlab supported MinGW compiler at https://www.mathworks.com/matl
 
 Install gcc by running "sudo apt-get install gcc"
 
-**Note:** MATLAB is incompatible with the latest releases of gcc, It is recommended to download the gcc version that is compatible with your MATLAB version.  Go check [Compilers - MATLAB & Simulink (mathworks.com)](https://www.mathworks.com/support/requirements/supported-compilers.html).
+**Note:** MATLAB is incompatible with the latest releases of gcc, even using the 2019b or 2020a releases of MATLAB (the latest versions of MATLAB at the time of this work). MATLAB needs this compiler to generate the mex64 files it needs to with the MATMPC toolbox. A workaround for this problem is [described at this link](https://www.mathworks.com/matlabcentral/answers/407502-incompatible-gcc-version-with-mex) and below.
+
+1. Download the 6.3.x release of gcc from [this link](https://drive.google.com/file/d/1VYb08z7BQH6LQDimcob_jsDHFjjNO8dY/view?usp=sharing)
+2. Move to the folder where the file is contained and run this command from the terminal line `sudo dpkg -i gcc-6-3-0_6.3.0_amd64.deb`
+3. Answer yes when asked to change the compiler to gcc-6.3 in MATLAB
 
 ### MacOS:
 
@@ -41,6 +42,3 @@ Install Xcode from app store
 7. In Draw.m, write your own plot functions to display your results.
 
 8. Run Simulation.m and see the results!
-
-### To use HPIPM as the QP solver
-please read /doc/HPIPM-tutorial for the detailed installation process

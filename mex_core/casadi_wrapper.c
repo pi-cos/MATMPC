@@ -817,3 +817,139 @@ void objN_Fun(double **in, double **out){
 
     objN_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
+
+// GP
+
+void gp_Fun(double **in, double **out){
+    const double *x = in[0];
+    const double *u = in[1];
+    const double *p = in[2];
+    const double *z = in[3];
+    
+    double *xn_gp = out[0];
+    
+    void *casadi_mem = NULL;
+//     int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[4];
+    double *casadi_res[1];
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = u;
+    casadi_arg[2] = p;
+    casadi_arg[3] = z;
+
+    casadi_res[0] = xn_gp;
+
+    gp_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}
+
+// void gp_jac_x_Fun(double **in, double **out){
+//     const double *x = in[0];
+//     const double *u = in[1];
+//     const double *p = in[2];
+//     const double *z = in[3];
+//     
+//     double *Jx = out[0];
+//     
+//     void *casadi_mem = NULL;
+// //     int casadi_mem = 0;
+//     int *casadi_iw = NULL;
+//     double *casadi_w = NULL;
+// 
+//     const double *casadi_arg[4];
+//     double *casadi_res[1];
+// 
+//     casadi_arg[0] = x;
+//     casadi_arg[1] = u;
+//     casadi_arg[2] = p;
+//     casadi_arg[3] = z;
+// 
+//     casadi_res[0] = Jx;
+// 
+//     gp_jac_x_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+// }
+// 
+// void gp_jac_u_Fun(double **in, double **out){
+//     const double *x = in[0];
+//     const double *u = in[1];
+//     const double *p = in[2];
+//     const double *z = in[3];
+//     
+//     double *Jx = out[0];
+//     
+//     void *casadi_mem = NULL;
+// //     int casadi_mem = 0;
+//     int *casadi_iw = NULL;
+//     double *casadi_w = NULL;
+// 
+//     const double *casadi_arg[4];
+//     double *casadi_res[1];
+// 
+//     casadi_arg[0] = x;
+//     casadi_arg[1] = u;
+//     casadi_arg[2] = p;
+//     casadi_arg[3] = z;
+// 
+//     casadi_res[0] = Jx;
+// 
+//     gp_jac_u_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+// }
+
+void gp_jac_Fun(double **in, double **out){
+    const double *x = in[0];
+    const double *u = in[1];
+    const double *p = in[2];
+    const double *z = in[3];
+    
+    double *Jx = out[0];
+    double *Ju = out[1];
+    
+    void *casadi_mem = NULL;
+//     int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[4];
+    double *casadi_res[1];
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = u;
+    casadi_arg[2] = p;
+    casadi_arg[3] = z;
+
+    casadi_res[0] = Jx;
+    casadi_res[1] = Ju;
+
+    gp_jac_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}
+
+void adj_GP_Fun(double **in, double **out){
+    const double *x = in[0];
+    const double *u = in[1];
+    const double *p = in[2];
+    const double *lambda = in[3];
+    const double *z = in[4];
+    
+    double *adjW = out[0];
+    
+    void *casadi_mem = NULL;
+//     int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[5];
+    double *casadi_res[1];
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = u;
+    casadi_arg[2] = p;
+    casadi_arg[3] = lambda;
+    casadi_arg[4] = z;
+
+    casadi_res[0] = adjW;
+
+    adj_GP_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}

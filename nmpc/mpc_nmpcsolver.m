@@ -23,7 +23,8 @@ function [output, mem] = mpc_nmpcsolver(input, settings, mem, opt)
             if strcmp(opt.qpsolver, 'qpoases_mb')
                 qp_generation_mb(input, settings, mem);
             else
-                qp_generation(input, settings, mem);
+                qp_generation_gp(input, settings, mem);
+%                 qp_generation(input, settings, mem);
 %                 qp_generation_tac(input, settings, mem);
             end
         end
@@ -111,9 +112,11 @@ function [output, mem] = mpc_nmpcsolver(input, settings, mem, opt)
 %         adaptive_eta(mem,settings);
                 
         %% ---------- KKT calculation 
-        
-        [eq_res, ineq_res, KKT, OBJ] = solution_info(input, settings, mem);
-                
+        if opt.info_flag 
+            [eq_res, ineq_res, KKT, OBJ] = solution_info(input, settings, mem);
+        else
+            eq_res = 0; ineq_res = 0; KKT = 0; OBJ = 0;
+        end
         StopCrit = max([eq_res, ineq_res, KKT]);
         
         %% ---------- Multiple call management and convergence check

@@ -31,4 +31,10 @@ void adjN_Fun(double **in, double **out);
 void obji_Fun(double **in, double **out);
 void objN_Fun(double **in, double **out);
 
+void gp_Fun(double **in, double **out);
+//void gp_jac_x_Fun(double **in, double **out);
+//void gp_jac_u_Fun(double **in, double **out);
+void gp_jac_Fun(double **in, double **out);
+void adj_GP_Fun(double **in, double **out);
+
 #endif

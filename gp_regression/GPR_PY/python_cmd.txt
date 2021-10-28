@@ -1,0 +1,1 @@
+python GP_ID.py -dim_GP_input 5 -dim_GP_output 2 -csv_data data/greybox_training_200points.csv -saving_path results_GP_ID/greybox -flg_norm True -sigma_n_num 0.01

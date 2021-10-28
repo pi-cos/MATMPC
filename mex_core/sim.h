@@ -12,6 +12,9 @@ typedef struct{
     size_t num_steps;
     bool forw_sens_flag;
     bool adj_sens_flag;
+    bool gp_flag;
+    bool gp_status_flag;
+    bool only_gp_flag;
 }sim_opts;
 
 typedef struct{
@@ -28,6 +31,13 @@ typedef struct{
     double *Sx;
     double *Su;
     double *adj_sens;
+    // GP
+    double *xn_gp;
+    double *xn_ode;
+    double *A_gp;
+    double *B_gp;
+    double *A_ode;
+    double *B_ode;
 }sim_out;
 
 sim_opts* sim_opts_create(const mxArray *mem);

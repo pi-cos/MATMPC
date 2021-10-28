@@ -4,6 +4,7 @@
 #include "casadi_wrapper.h"
 #include "sim.h"
 #include "erk.h"
+#include "erk_gp.h"
 #include "irk_ode.h"
 #include "irk_dae.h"
 
@@ -17,6 +18,7 @@ static sim_opts *opts = NULL;
 static sim_in *in = NULL;
 static sim_out *out = NULL;
 static sim_erk_workspace *erk_workspace = NULL;
+static sim_erk_gp_workspace *erk_gp_workspace = NULL;
 static sim_irk_ode_workspace *irk_ode_workspace = NULL;
 static sim_irk_dae_workspace *irk_dae_workspace = NULL;
 static bool mem_alloc = false;
@@ -29,6 +31,8 @@ static double *lu, *uu, *lx, *ux, *tmp;
 void exitFcn(){   
     if (erk_workspace!=NULL)
         sim_erk_workspace_free(opts, erk_workspace);
+    if (erk_gp_workspace!=NULL)
+        sim_erk_gp_workspace_free(opts, erk_gp_workspace);
     if (irk_ode_workspace!=NULL)
         sim_irk_ode_workspace_free(opts, irk_ode_workspace);
     if (irk_dae_workspace!=NULL)
@@ -158,6 +162,16 @@ mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
                 irk_dae_workspace = sim_irk_dae_workspace_create(opts);               
                 sim_irk_dae_workspace_init(opts, prhs[2], irk_dae_workspace);
                 break;
+            case 4:
+                opts = sim_opts_create(prhs[2]);
+                opts->forw_sens_flag = false;
+                opts->adj_sens_flag = true;
+                opts->gp_status_flag = false; // no gp info in output
+                in = sim_in_create(opts);              
+                out = sim_out_create(opts);                
+                erk_gp_workspace = sim_erk_gp_workspace_create(opts);               
+                sim_erk_gp_workspace_init(opts, prhs[2], erk_gp_workspace); 
+                break;
             default:
                 mexErrMsgTxt("Please choose a supported integrator");
                 break;
@@ -226,6 +240,16 @@ mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
                 out->adj_sens = casadi_out[2];
                 sim_irk_dae(in, out, opts, irk_dae_workspace);
                 break;
+            case 4:      
+                in->x = x+i*nx;
+                in->u = u+i*nu;
+                in->p = od+i*np;
+                in->lambda = lambda+(i+1)*nx;
+                out->xn = eq_res_vec+(i+1)*nx;
+                out->adj_sens = casadi_out[2];
+                opts->gp_status_flag = false; // no gp info in output
+                sim_erk_gp(in, out, opts, erk_gp_workspace);
+                break;
             default :
                 mexErrMsgTxt("Please choose a supported integrator");
                 break;
@@ -240,9 +264,9 @@ mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
                 casadi_out[2][j] += lambda[j];
         }
         casadi_out[0] = L+i*nv;
-        adj_Fun(casadi_in, casadi_out);                      
-        daxpy(&nv, &one_d, casadi_out[1], &one_i, casadi_out[0], &one_i); // dojb+dB'*mu
-        daxpy(&nv, &one_d, casadi_out[2], &one_i, casadi_out[0], &one_i); // dobj+dB'*mu+dG'*lambda 
+        adj_Fun(casadi_in, casadi_out);  // dojb                    
+        daxpy(&nv, &one_d, casadi_out[1], &one_i, casadi_out[0], &one_i); // dojb+dB'*mu -> disequality constraints on x, u, general
+        daxpy(&nv, &one_d, casadi_out[2], &one_i, casadi_out[0], &one_i); // dobj+dB'*mu+dG'*lambda -> equality constraints (dynamics)
         
         // equality constraint residual
         for (j=0;j<nx;j++)

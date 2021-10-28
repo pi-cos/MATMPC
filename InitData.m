@@ -20,7 +20,8 @@ function [input, data] = InitData(settings)
             input.x0 = [0;pi;0;0];    
             input.u0 = zeros(nu,1); 
             input.z0 = zeros(nz,1);
-            para0 = 0;  
+            ode_flag = 1;
+            para0 = [1;0.1;0.8;ode_flag];  
 
             Q=repmat([10 10 0.1 0.1 0.01]',1,N);
             QN=[10 10 0.1 0.1]';
@@ -30,179 +31,76 @@ function [input, data] = InitData(settings)
             ub_x = 2;
 
             % upper and lower bounds for controls (=nbu)           
-            lb_u = -20;
-            ub_u = 20;
+            lb_u = -50;
+            ub_u = +50;
                        
             % upper and lower bounds for general constraints (=nc)
             lb_g = [];
             ub_g = [];            
             lb_gN = [];
             ub_gN = [];
-
-        case 'ChainofMasses_Lin'
-            n=5;
-            data.n=n;
-            input.x0=zeros(nx,1);
-            for i=1:n
-                input.x0(i)=7.5*i/n;
-            end
-            input.u0=zeros(nu,1);
-            input.z0 = zeros(nz,1);
-            para0=0;
-            wv=[];wx=[];
-            wu = [0.1 0.1 0.1];
-            for i=1:3
-                wx = [wx, 25];
-                wv = [wv, 0.25*ones(1,n-1)];
-            end
-            Q = repmat([wx,wv,wu]',1,N);
-            QN= [wx,wv]';
-
-            % upper and lower bounds for states (=nbx)
-            lb_x = [];
-            ub_x = [];
-
-            % upper and lower bounds for controls (=nbu)           
-            lb_u = [-1;-1;-1];
-            ub_u = [1;1;1];
-                       
-            % upper and lower bounds for general constraints (=nc)
-            lb_g = [];
-            ub_g = [];            
-            lb_gN = [];
-            ub_gN = [];
-
-        case 'ChainofMasses_NLin'
-            n=10;
-            data.n=n;
-            input.x0=[0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1 zeros(1,nx-n)]';
-            input.u0=zeros(nu,1);
-            input.z0 = zeros(nz,1);
-            para0=0;
-            wv=[];wx=[];
-            wu=[0.01, 0.01, 0.01];
-            for i=1:3
-                wx=[wx,25];
-                wv=[wv,ones(1,n-1)];
-            end
-            Q = repmat([wx,wv,wu]',1,N);
-            QN= [wx,wv]';
-
-            % upper and lower bounds for states (=nbx)
-            lb_x = [];
-            ub_x = [];
-
-            % upper and lower bounds for controls (=nbu)           
-            lb_u = [-1;-1;-1];
-            ub_u = [1;1;1];
-                       
-            % upper and lower bounds for general constraints (=nc)
-            lb_g = [];
-            ub_g = [];            
-            lb_gN = [];
-            ub_gN = [];
-                                       
-        case 'TethUAV'
             
-            input.x0=[0; 0; 0; 0; 9.81; 0];%zeros(nx,1);
-            input.u0=[0; 0; 0; 0];%zeros(nu,1);
-            input.z0 = zeros(nz,1);
-            alpha = pi/6;
-            para0=[-alpha; alpha];
-            % phi phi_dot theta theta_dot 
-            q = [200, 1, 200, 0, 0.0001, 0.0001, 1, 1, 1, 0, 5000, 5000];
-
-            qN = q(1:nyN);
-            Q = repmat(q',1,N);
-            QN = qN';
+        case 'InvertedPendulum_GP'
             
-            fR_min = 0;%-inf;
-            fR_max = 15;%inf;
-            tauR_min = -1.2;%-inf;
-            tauR_max = 1.2;%inf;
-            fL_min = 0;%-inf;
-            fL_max = 10;%inf;
-            constr_max = 0;
-            constr_min = -inf;
-            s1_min = 0;
-            s1_max = inf;
-            s2_min = 0;
-            s2_max = inf;
-            
-            % upper and lower bounds for states (=nbx) if f1,2 are f_R, tau_R
-            lb_x = [fR_min; tauR_min];%0*ones(nbx,1);
-            ub_x = [fR_max; tauR_max]; %omegaMax*ones(nbx,1);
-            
-            % upper and lower bounds for controls (=nbu)           
-            lb_u = [s1_min; s2_min];
-            ub_u = [s1_max; s2_max];
-                       
-            % upper and lower bounds for general constraints (=nc)
-            lb_g = [fL_min; constr_min; constr_min];
-            ub_g = [fL_max; constr_max; constr_max];            
-            lb_gN = [fL_min];
-            ub_gN = [fL_max]; 
-            
-        case 'DiM'	
-            input.x0 = zeros(nx,1);    % initial state	
-            input.u0 = zeros(nu,1);    % initial control
-            input.z0 = zeros(nz,1);
-            para0 = 0;  % initial parameters (by default a np by 1 vector, if there is no parameter, set para0=0)	
-
-             %weighting matrices	
-            Q=[1200,1200,2000,800,800,5800,... % perceived acc and angular vel	
-                    32000*1.1,32000*1.1,1600*1,... %px,py,pz hex	
-                    3200*1.1,3200*1.1,2000*1,... %vx, vy, vz hex	
-                    4600*1,600*1,... % x,y tri	
-                    850*1,850*1,... % vx,vy tri	
-                    3700,3000,1500,... % phi, theta, psi hex	
-                    750,... % phi tri	
-                    0.01,0.0,0.0,... % omega phi,theta,psi hex	
-                    500.0,... % omega phi tri	
-                    0.0,0.0,0.001,... %ax,ay,az hex %         20*1.1,20*1.1,... % ax,ay tri	
-                    0.0,0.01,0.1 ... % alpha phi,theta, psi hex 	
-                    ];	
-              Q = repmat(Q',1,N);	
-
-              QN=Q(1:nyN,1);	
-
-               % upper and lower bounds for states (=nbx)	
-              lb_x = [];	
-              ub_x = [];	
-
-               % upper and lower bounds for controls (=nbu)           	
-              lb_u = [];	
-              ub_u = [];	
-
-               % upper and lower bounds for general constraints (=nc)	
-              lb_g=[1.045;1.045;1.045;1.045;1.045;1.045];    % lower bounds for ineq constraints	
-              ub_g=[1.3750;1.3750;1.3750;1.3750;1.3750;1.3750];  % upper bounds for ineq constraints	
-              lb_gN=[1.045;1.045;1.045;1.045;1.045;1.045];  % lower bounds for ineq constraints at terminal point	
-              ub_gN=[1.3750;1.3750;1.3750;1.3750;1.3750;1.3750];  % upper bounds for ineq constraints at terminal point
-              
-        case 'TurboEngine'
-            input.x0 = [1.2; 1.2; 0; 0];
+            input.x0 = [0;pi;0;0];    
             input.u0 = zeros(nu,1); 
-            input.z0 = [1.1; 1.1];
-            para0 = [2000; -0.3];  
+            input.z0 = zeros(nz,1);
+            if strcmp(settings.mpc_model,'white_box_corr')
+                l_p = 0.5;
+            else
+                l_p = 0.8;
+            end
+            if strcmp(settings.mpc_model,'black_box')
+                ode_flag = 0;
+            else
+                ode_flag = 1;
+            end
+            para0_ode = [1;0.1;l_p;ode_flag];  
 
-            Q=repmat([10 1e-7*0.05 1e-6*0.05]',1,N);
-            QN=[10]';
+            Q=repmat([10 10 0.1 0.1 0.01]',1,N);
+            QN=[10 10 0.1 0.1]';
 
             % upper and lower bounds for states (=nbx)
-            lb_x = [0;0];
-            ub_x = [100;100];
+            lb_x = -2;
+            ub_x = 2;
 
             % upper and lower bounds for controls (=nbu)           
-            lb_u = [-800; -800];
-            ub_u = [800; 800];
+            lb_u = -50;
+            ub_u = +50;
                        
             % upper and lower bounds for general constraints (=nc)
-            lb_g = [0; 0; 0];
-            ub_g = [2; 90e3/60; 180e3/60];        
-            lb_gN = [0; 0; 0];
-            ub_gN = [2; 90e3/60; 180e3/60];  
-                                                            
+            lb_g = [];
+            ub_g = [];            
+            lb_gN = [];
+            ub_gN = [];
+            
+            % GP params
+            if strcmp(settings.mpc_model,'grey_box') || strcmp(settings.mpc_model,'black_box')
+                if strcmp(settings.mpc_model,'black_box')
+                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\blackbox'];
+                else %strcmp(settings.mpc_model,'grey_box')
+                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\greybox'];
+                end
+                name = '';
+                X = readmatrix([gp_res_path,'\X',name,'.csv']);
+                alpha_1 = readmatrix([gp_res_path,'\alpha_1',name,'.csv']);
+                l_1 = readmatrix([gp_res_path,'\l_1',name,'.csv'])';
+                alpha_2 = readmatrix([gp_res_path,'\alpha_2',name,'.csv']);
+                l_2 = readmatrix([gp_res_path,'\l_2',name,'.csv'])';
+                
+                X_line = [];
+                for i =1:settings.xGP
+                    X_line = [X_line;X(:,i)];
+                end
+                para0_GP = [X_line;alpha_1;l_1';alpha_2;l_2'];
+            else
+                para0_GP = zeros(settings.npGP,1);%[X_line;alpha_1;l_1';alpha_2;l_2'];
+            end
+            
+%             para0_GP = zeros(settings.npGP,1);
+            
+            para0 = [para0_ode;para0_GP];
+                          
     end
 
     % prepare the data
@@ -250,29 +148,10 @@ function [input, data] = InitData(settings)
 
             data.REF=zeros(1,nx+nu);
 
-        case 'ChainofMasses_Lin'
-
-            data.REF=[7.5,0,0,zeros(1,3*(n-1)),zeros(1,nu)];
-
-        case 'ChainofMasses_NLin'
-
-            data.REF=[1,0,0,zeros(1,3*(n-1)),zeros(1,nu)];
-                                                                
-        case 'TethUAV'
             
-        	data.REF = zeros(1, ny);
-            
-        case 'DiM'	
+        case 'InvertedPendulum_GP'
 
-             load REF_DiM_2;	
-
-             REF_DiM_2 = [REF_DiM_2, zeros(5000,24)];	
-
-             data.REF = REF_DiM_2;
-             
-        case 'TurboEngine'
-            
-            data.REF=[1.4, 0, 0];
+            data.REF=zeros(1,nx+nu);
                      
     end
     
