@@ -422,7 +422,7 @@ function [mem] = InitMemory(settings, opt, input)
     if strcmp(opt.RTI,'yes')
         mem.sqp_maxit=1;         % use RTI
     else       
-        if opt.info_flag
+        if ~opt.info_flag
             error('Info needed for SQP!')
         end
         mem.sqp_maxit = 50;      % maximum number of iterations for each sampling instant

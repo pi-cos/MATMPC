@@ -35,7 +35,8 @@ C. Now we can install BLASFEO and HPIPM.
 
 9. go to HPIPM directory, open Makefile.rule using text editor
 10. do the same thing as in steps 4 and 5
-11. do the same thing as in steps 7 
+11. modify the BLASFEO_PATH variable according to the Blasfeo installation directory
+12. do the same thing as in steps 7 
 
 
 D. OK we are done! Let's compile mexFunction in MATLAB

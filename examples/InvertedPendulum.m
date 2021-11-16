@@ -95,4 +95,4 @@ Ts_st = 0.025; % shooting interval time
 
 %% GP definitions
 
-settings.gp_generation = 1;
+settings.gp_generation = 0;
