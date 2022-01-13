@@ -98,5 +98,5 @@ mexcmd_pcondsol = [mexcmd, ' ', mexfiles_pcondsol];
 mexcmd_bcond = [mexcmd, ' ', mexfiles_bcond];
 
 eval(mexcmd_sp);
-eval(mexcmd_pcondsol);
-eval(mexcmd_bcond);
+% eval(mexcmd_pcondsol);
+% eval(mexcmd_bcond);

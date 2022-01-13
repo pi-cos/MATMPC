@@ -148,5 +148,5 @@ gp_grad = jacobian(psi_bar,x_star) + SX.zeros(nx,nx+nu);
 gp_grad_x = gp_grad(:,1:nx);
 gp_grad_u = gp_grad(:,nx+1:end);
     
-settings.gp_generation = 1;
+settings.gp_generation = 'discrete';
 

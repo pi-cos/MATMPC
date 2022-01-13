@@ -207,8 +207,8 @@ while time(end) < Tf
     sim_input.p = input.od(:,1);% -> [1;0.1;0.8]
     if strcmp(settings.gp_generation,'continuous')
         sim_input.p(1:settings.npODE) = [1;0.1;0.5;1;0];
-        acc_true_curr = acc_fun('acc_fun',sim_input.x,sim_input.u,sim_input.p,sim_input.z );
-        acc_true = [acc_true;acc_true_curr'];
+        acc_true_curr = acc_fun('acc_fun',input.x(:,1),input.u(:,1),input.od(:,1),input.z(:,1));
+        acc_true = [acc_true;acc_pred_curr'];
     else
         sim_input.p(1:settings.npODE) = [1;0.1;0.5;1];
     end

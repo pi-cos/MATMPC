@@ -387,8 +387,8 @@ function [mem] = InitMemory(settings, opt, input)
             
         case 'ERK4-GP'
             
-            if ~settings.gp_generation
-                error('GP must be generated for ERK4-GP integration!')
+            if ~strcmp(settings.gp_generation,'discrete')
+                error('Discrete GP must be generated for ERK4-GP integration!')
             end
             
             mem.sim_method = 4;

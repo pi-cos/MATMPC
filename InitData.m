@@ -40,7 +40,7 @@ function [input, data] = InitData(settings)
             lb_gN = [];
             ub_gN = [];
             
-        case 'InvertedPendulum_GP'
+        case 'InvertedPendulum_disc_GP'
             
             input.x0 = [0;pi;0;0];    
             input.u0 = zeros(nu,1); 
@@ -100,7 +100,57 @@ function [input, data] = InitData(settings)
 %             para0_GP = zeros(settings.npGP,1);
             
             para0 = [para0_ode;para0_GP];
-                          
+
+        case 'InvertedPendulum_cont_GP'
+            input.x0 = [0;pi;0;0];
+            input.u0 = zeros(nu,1);
+            input.z0 = zeros(nz,1);
+            ode_flag = 1;
+            gp_flag = 0;
+            para0_ode = [1;0.1;0.8;ode_flag;gp_flag];
+
+            Q=repmat([10 10 0.1 0.1 0.01]',1,N);
+            QN=[10 10 0.1 0.1]';
+
+            % upper and lower bounds for states (=nbx)
+            lb_x = -2;
+            ub_x = 2;
+
+            % upper and lower bounds for controls (=nbu)
+            lb_u = -50;
+            ub_u = +50;
+
+            % upper and lower bounds for general constraints (=nc)
+            lb_g = [];
+            ub_g = [];
+            lb_gN = [];
+            ub_gN = [];
+
+            % GP params
+            if gp_flag
+                if strcmp(settings.mpc_model,'black_box')
+                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\blackbox'];
+                else %strcmp(settings.mpc_model,'grey_box')
+                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\greybox'];
+                end
+                name = '';
+                X = readmatrix([gp_res_path,'\X',name,'.csv']);
+                alpha_1 = readmatrix([gp_res_path,'\alpha_1',name,'.csv']);
+                l_1 = readmatrix([gp_res_path,'\l_1',name,'.csv'])';
+                alpha_2 = readmatrix([gp_res_path,'\alpha_2',name,'.csv']);
+                l_2 = readmatrix([gp_res_path,'\l_2',name,'.csv'])';
+                
+                X_line = [];
+                for i =1:settings.xGP
+                    X_line = [X_line;X(:,i)];
+                end
+                para0_GP = [X_line;alpha_1;l_1';alpha_2;l_2'];
+            else
+                para0_GP = zeros(settings.npGP,1);%[X_line;alpha_1;l_1';alpha_2;l_2'];
+            end
+
+            para0 = [para0_ode;para0_GP];
+
     end
 
     % prepare the data
@@ -144,14 +194,10 @@ function [input, data] = InitData(settings)
 
     switch settings.model
 
-        case 'InvertedPendulum'
+        case {'InvertedPendulum','InvertedPendulum_disc_GP','InvertedPendulum_cont_GP'}
 
             data.REF=zeros(1,nx+nu);
 
-            
-        case 'InvertedPendulum_GP'
-
-            data.REF=zeros(1,nx+nu);
                      
     end
     

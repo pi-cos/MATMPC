@@ -308,6 +308,16 @@ const char* gp_jac_fun_name_out(int i);
 const int* gp_jac_fun_sparsity_in(int i);
 const int* gp_jac_fun_sparsity_out(int i);
 int gp_jac_fun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int acc_fun(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem);
+void acc_fun_incref(void);
+void acc_fun_decref(void);
+int acc_fun_n_out(void);
+int acc_fun_n_in(void);
+const char* acc_fun_name_in(int i);
+const char* acc_fun_name_out(int i);
+const int* acc_fun_sparsity_in(int i);
+const int* acc_fun_sparsity_out(int i);
+int acc_fun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

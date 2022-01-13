@@ -1,3 +1,4 @@
+
 %------------------------------------------%
 % Inverted Pendulum 
   
@@ -17,15 +18,24 @@ nu=1;  % No. of controls
 nz=0;  % No. of algebraic states
 ny=5; % No. of outputs
 nyN=4; % No. of outputs at the terminal point
-np=4; % No. of model parameters
+npODE=5; % No. of model parameters
 nc=0; % No. of general constraints
 ncN=0; % No. of general constraints at the terminal point
 nbx = 1; % No. of bounds on states
 nbu = 1; % No. of bounds on controls
 
+% GP
+T = 0; %200 % No. of training points for the GP
+xGP = 0; %5 % Dimension of training points for the GP
+yGP = 0; %2 % # of target of the GP
+npGP = T*xGP+yGP*(T+xGP); %X, ny*(alpha_i, l_i)
+
 % state and control bounds
 nbx_idx = 1; % indexs of states which are bounded
 nbu_idx = 1; % indexs of controls which are bounded
+
+% full params vector dimension
+np = npODE+npGP;
 
 %% create variables
 
@@ -34,7 +44,7 @@ import casadi.*
 states   = SX.sym('states',nx,1);   % differential states
 controls = SX.sym('controls',nu,1); % control input
 alg      = SX.sym('alg',nz,1);      % algebraic states
-params   = SX.sym('paras',np,1);    % parameters
+params   = SX.sym('paras',np,1); % parameters + GP params
 refs     = SX.sym('refs',ny,1);     % references of the first N stages
 refN     = SX.sym('refs',nyN,1);    % reference of the last stage
 Q        = SX.sym('Q',ny,1);        % weighting matrix of the first N stages
@@ -49,6 +59,7 @@ m = params(2);%0.1;
 l = params(3);%0.8; 
 
 ode_flag = params(4);
+gp_flag = params(5);
 
 g = 9.81;
 
@@ -62,8 +73,53 @@ a=-m*l*sin(theta)*omega^2+m*g*cos(theta)*sin(theta)+u;
 b=-m*l*cos(theta)*sin(theta)*omega^2+u*cos(theta)+(M+m)*g*sin(theta);
 c=M+m-m*(cos(theta))^2;
 
-% explicit ODE RHS
-x_dot=[v;omega;a/c;b/(l*c)]*ode_flag;
+v_dot = a/c;
+omega_dot = b/(l*c);
+
+acc_fun = Function('acc_fun', {states,controls,params,alg},{[v_dot;omega_dot]});
+
+%% GP definitions
+addpath([pwd,'\gp_regression'])
+
+% GP test point
+x_star = [states',controls'];
+
+% GP parametric functions
+X = [];
+for i = 1:xGP
+    X = [X,params(npODE+(i-1)*T+1:npODE+i*T)];
+end
+X = X+SX.zeros(T,xGP);
+
+idx_1 = npODE+xGP*T;
+alpha_1 = params(idx_1+1:idx_1+T)+SX.zeros(T,1);
+l_1 = params(idx_1+T+1:idx_1+T+xGP)'+SX.zeros(1,xGP);
+
+idx_2 = idx_1+T+xGP;
+alpha_2 = params(idx_2+1:idx_2+T)+SX.zeros(T,1);
+l_2 = params(idx_2+T+1:idx_2+T+xGP)'+ SX.zeros(1,xGP);
+
+% define GP for linear velocity
+k_star_1 = RBF_cov_line_casadi(X, x_star, l_1);
+psi_hat_1 = k_star_1*alpha_1;
+
+% define GP for rotational velocity
+k_star_2 = RBF_cov_line_casadi(X, x_star, l_2);
+psi_hat_2 = k_star_2*alpha_2;
+
+% define the GP values on the states
+psi_bar = [psi_hat_1;...
+           psi_hat_2...
+         ];
+       
+settings.gp_generation = 'continuous';
+
+%% explicit ODE RHS
+
+x_dot=[ v;...
+        omega;...
+        v_dot*ode_flag+psi_bar(1)*gp_flag;...
+        omega_dot*ode_flag+psi_bar(2)*gp_flag];
  
 % algebraic function
 z_fun = [];                   
@@ -92,11 +148,3 @@ general_con_N = [];
 %% NMPC discretizing time length [s]
 
 Ts_st = 0.025; % shooting interval time
-
-%% GP definitions
-
-settings.gp_generation = 0;
-npODE=np; % No. of model parameters
-npGP = 0;
-yGP = 0;
-xGP = 0;

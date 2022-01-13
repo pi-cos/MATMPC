@@ -17,7 +17,7 @@ disp('--------------------------------------------------------------------------
 addpath([pwd,'/examples']);
 addpath([userpath,'\casadi-matlabR2014b-v3.3.0']);
 
-settings.model='InvertedPendulum_GP'; % see the folder "examples" for details
+settings.model='InvertedPendulum_cont_GP'; % see the folder "examples" for details
 run(settings.model);
 
 %%
@@ -32,7 +32,7 @@ muN_g=SX.sym('muN_g',ncN,1);                 % the N th multiplier for inequalit
 
 %% GP generation 
 
-if settings.gp_generation
+if strcmp(settings.gp_generation,'discrete')
     gp_fun = Function('gp_fun', {states,controls,params,alg},{psi_bar+SX.zeros(nx,1)});
     gp_jac_fun = Function('gp_jac_fun',{states,controls,params,alg},{gp_grad_x+SX.zeros(nx,nx),gp_grad_u+SX.zeros(nx,nu)});
 else
@@ -86,7 +86,7 @@ if nz==0
     adjW = SX.zeros(nx+nu,1) + jtimes(x_dot, [states;controls], lambda, true);
     adj_ERK_fun = Function('adj_ERK_fun',{states,controls,params,lambda,alg},{adjW});
 
-    if settings.gp_generation
+    if strcmp(settings.gp_generation,'discrete')
         adjGP = SX.zeros(nx+nu,1) + jtimes(psi_bar, [states;controls], lambda, true);
     else
         adjGP = SX.zeros(nx+nu,1);
@@ -207,11 +207,16 @@ if strcmp(generate,'y')
     g_fun.generate('g_fun.c',opts);
     path_con_fun.generate('path_con_fun.c',opts);
     path_con_N_fun.generate('path_con_N_fun.c',opts);
+    % discrete GP
     gp_fun.generate('gp_fun.c',opts);
 %     gp_jac_x_fun.generate('gp_jac_x_fun.c',opts);
 %     gp_jac_u_fun.generate('gp_jac_u_fun.c',opts);
     gp_jac_fun.generate('gp_jac_fun.c',opts);
     adj_GP_fun.generate('adj_GP_fun.c',opts);
+    % continuous GP
+    if strcmp(settings.gp_generation,'continuous')
+        acc_fun.generate('acc_fun.c',opts);
+    end
    
     opts = struct('main',false,'mex',false,'with_header',true);
     cd ../mex_core
@@ -243,12 +248,16 @@ if strcmp(generate,'y')
         P.add(JN_fun);
         P.add(Ci_fun);
         P.add(CN_fun);
-        % GP
+        % discrete GP
         P.add(gp_fun);
 %         P.add(gp_jac_x_fun);
 %         P.add(gp_jac_u_fun);
         P.add(adj_GP_fun);
         P.add(gp_jac_fun);
+        % continuous GP
+        if strcmp(settings.gp_generation,'continuous')
+            P.add(acc_fun);
+        end
         
         P.generate();
     cd ..
@@ -289,12 +298,16 @@ if strcmp(compile,'y')
     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'h_fun.c');
     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'f_fun.c');
     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'g_fun.c');
-    % GP
+    % discrete GP
     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'gp_fun.c');
 %     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'gp_jac_x_fun.c');
 %     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'gp_jac_u_fun.c');
     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'gp_jac_fun.c');
     mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'adj_GP_fun.c');
+    % continuous GP
+    if strcmp(settings.gp_generation,'continuous')
+        mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'acc_fun.c');
+    end
 
     cd ../mex_core
     Compile_Mex;
