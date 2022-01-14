@@ -68,18 +68,37 @@ switch settings.model
         plot(time(2:end),state_sim(2:end,4)-one_step_pred(:,4));
         title('difference sim vs pred - \omega');
 
-        figure(3)
-        subplot(211)
-        plot(acc_true(:,1))
-        hold on
-        plot(acc_pred(:,1),'--')
-        title('linear acc')
-        subplot(212)
-        plot(acc_true(:,2))
-        hold on
-        plot(acc_pred(:,2),'--')
-        title('rotational acc')
-        legend('true','pred')
+        if strcmp(opt.mpc_model,'cont_grey_box')
+            figure(3)
+            subplot(211)
+            plot(acc_true(:,1))
+            hold on
+            plot(acc_pred(:,1),':')
+            plot(acc_gp(:,1),':')
+            plot(acc_pred(:,1)+acc_gp(:,1),'--')
+            title('linear acc')
+            subplot(212)
+            plot(acc_true(:,2))
+            hold on
+            plot(acc_pred(:,2),':')
+            plot(acc_gp(:,2),':')
+            plot(acc_pred(:,2)+acc_gp(:,2),'--')
+            title('rotational acc')
+            legend('true','nominal pred','gp pred','complete pred')
+        elseif strcmp(opt.mpc_model,'cont_black_box')
+            figure(3)
+            subplot(211)
+            plot(acc_true(:,1))
+            hold on
+            plot(acc_gp(:,1),'--')
+            title('linear acc')
+            subplot(212)
+            plot(acc_true(:,2))
+            hold on
+            plot(acc_gp(:,2),'--')
+            title('rotational acc')
+            legend('true','gp pred')
+        end
         
     case {'InvertedPendulum_disc_GP','InvertedPendulum'}
         

@@ -72,11 +72,12 @@ opt.nonuniform_grid = 0; % if use non-uniform grid discretization (go to InitMem
 opt.RTI             = 'yes'; % if use Real-time Iteration
 
 opt.info_flag       = 0; % compute the equality residual (computationally expensive with GP - not useful in RTI)
-opt.mpc_model       = 'white_box_nom'; % model to be used in the QP generation 
-% 'white_box_nom','white_box_corr','disc_grey_box', 'disc_black_box', ''
-opt.gp_data_save    = 1; % save data for GP (only using white-box nominal model)
+opt.mpc_model       = 'cont_black_box'; % model to be used in the QP generation 
+% 'white_box_nom','white_box_corr','disc_grey_box', 'disc_black_box', 'cont_grey_box', 'cont_black_box'
+opt.gp_data_save    = 0; % save data for GP (only using white-box nominal model)
 if opt.gp_data_save
-    opt.save_target     = 'grey_box'; % target for GPR (only if gp_data_save is active) % 'grey_box', 'black_box'
+    opt.save_target     = 'cont_black_box'; % target for GPR (only if gp_data_save is active) 
+    % 'cont_grey_box', 'cont_black_box', 'disc_grey_box', 'disc_black_box'
 end
 
 %% available qpsolver
@@ -99,8 +100,8 @@ end
 settings.mpc_model = opt.mpc_model;   
 
 if opt.nonuniform_grid
-    if strcmp(opt.mpc_model,'grey_box') || strcmp(opt.mpc_model,'black_box')
-        error('Non-uniform grid not implemented for GP models yet.')
+    if strcmp(opt.mpc_model,'disc_grey_box') || strcmp(opt.mpc_model,'disc_black_box')
+        error('Non-uniform grid not implemented for discrete GP models yet.')
     end
     [input, data] = InitData_ngrid(settings);
     N = r;
@@ -131,6 +132,7 @@ one_step_pred = [];
 if strcmp(settings.gp_generation,'continuous')
     acc_pred = [];
     acc_true = [];
+    acc_gp = [];
 end
 
 while time(end) < Tf
@@ -154,14 +156,24 @@ while time(end) < Tf
     
     % call the NMPC solver 
     input_x = input.x(:,:);
-    if strcmp(opt.mpc_model,'grey_box') || strcmp(opt.mpc_model,'black_box')
+    if strcmp(opt.mpc_model,'disc_grey_box') || strcmp(opt.mpc_model,'disc_black_box')
         clear mex; mem.gp_flag = 1; 
     end
     [output, mem] = mpc_nmpcsolver(input, settings, mem, opt);
 
     if strcmp(settings.gp_generation,'continuous')
-        acc_pred_curr = acc_fun('acc_fun',input.x(:,1),input.u(:,1),input.od(:,1),input.z(:,1));
-        acc_pred = [acc_pred;acc_pred_curr'];
+        if strcmp(opt.mpc_model,'white_box_nom')
+            acc_pred_curr = acc_fun('acc_fun',input.x(:,1),input.u(:,1),input.od(:,1),input.z(:,1));
+            acc_pred = [acc_pred;acc_pred_curr'];
+        elseif strcmp(opt.mpc_model,'cont_black_box')
+            acc_gp_curr = gp_cont_fun('gp_cont_fun',input.x(:,1),input.u(:,1),input.od(:,1),input.z(:,1));
+            acc_gp = [acc_gp;acc_gp_curr'];
+        elseif strcmp(opt.mpc_model,'cont_grey_box')
+            acc_gp_curr = gp_cont_fun('gp_cont_fun',input.x(:,1),input.u(:,1),input.od(:,1),input.z(:,1));
+            acc_gp = [acc_gp;acc_gp_curr'];
+            acc_pred_curr = acc_fun('acc_fun',input.x(:,1),input.u(:,1),input.od(:,1),input.z(:,1));
+            acc_pred = [acc_pred;acc_pred_curr'];
+        end
     end
         
     % obtain the solution and update the data
@@ -214,7 +226,7 @@ while time(end) < Tf
         sim_input.p(1:settings.npODE) = [1;0.1;0.5;1];
     end
 
-    if strcmp(opt.mpc_model,'grey_box') || strcmp(opt.mpc_model,'black_box')
+    if strcmp(opt.mpc_model,'disc_grey_box') || strcmp(opt.mpc_model,'disc_black_box')
         clear mex; mem.gp_flag = 0;
     end
     [xf, zf] = Simulate_System(sim_input.x, sim_input.u, sim_input.z, sim_input.p, mem, settings);
@@ -268,7 +280,7 @@ Draw;
 if opt.gp_data_save
     if strcmp(opt.mpc_model,'white_box_nom')
         addpath('gp_regression')
-        name_csv = [settings.gp_generation,'_',opt.save_target,'_ip_sim'];
+        name_csv = [opt.save_target,'_ip_sim'];
         save_gp_data
     else
         error('Data must be saved with nominal model.')
@@ -277,7 +289,7 @@ end
 
 %% save data for plots
 
-% save(['data\sim_',num2str(opt.mpc_model)],'time','one_step_pred','state_sim','controls_MPC')
-save(['data\sim_',num2str(opt.mpc_model),'_gp',num2str(mem.gp_flag)],'time','one_step_pred','state_sim','controls_MPC')
+save(['data\sim_',num2str(opt.mpc_model)],'time','one_step_pred','state_sim','controls_MPC')
+% save(['data\sim_',num2str(opt.mpc_model),'_gp',num2str(mem.gp_flag)],'time','one_step_pred','state_sim','controls_MPC')
 
     

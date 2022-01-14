@@ -216,6 +216,7 @@ if strcmp(generate,'y')
     % continuous GP
     if strcmp(settings.gp_generation,'continuous')
         acc_fun.generate('acc_fun.c',opts);
+        gp_cont_fun.generate('gp_cont_fun.c',opts);
     end
    
     opts = struct('main',false,'mex',false,'with_header',true);
@@ -257,6 +258,7 @@ if strcmp(generate,'y')
         % continuous GP
         if strcmp(settings.gp_generation,'continuous')
             P.add(acc_fun);
+            P.add(gp_cont_fun);
         end
         
         P.generate();
@@ -307,6 +309,7 @@ if strcmp(compile,'y')
     % continuous GP
     if strcmp(settings.gp_generation,'continuous')
         mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'acc_fun.c');
+        mex(options, OP_FLAGS, CC_FLAGS, PRINT_FLAGS, 'gp_cont_fun.c');
     end
 
     cd ../mex_core

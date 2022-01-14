@@ -119,6 +119,8 @@ psi_bar = [0;...psi_hat_1*Ts_st/2; ... ...
        
 settings.gp_generation = 'continuous';
 
+gp_cont_fun = Function('gp_cont_fun', {states,controls,params,alg},{[psi_hat_1;psi_hat_2]});
+
 %% explicit ODE RHS
 
 x_dot=[ v;...

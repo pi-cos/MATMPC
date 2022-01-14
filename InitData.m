@@ -50,7 +50,7 @@ function [input, data] = InitData(settings)
             else
                 l_p = 0.8;
             end
-            if strcmp(settings.mpc_model,'black_box')
+            if strcmp(settings.mpc_model,'disc_black_box')
                 ode_flag = 0;
             else
                 ode_flag = 1;
@@ -75,11 +75,11 @@ function [input, data] = InitData(settings)
             ub_gN = [];
             
             % GP params
-            if strcmp(settings.mpc_model,'grey_box') || strcmp(settings.mpc_model,'black_box')
-                if strcmp(settings.mpc_model,'black_box')
-                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\blackbox'];
-                else %strcmp(settings.mpc_model,'grey_box')
-                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\greybox'];
+            if strcmp(settings.mpc_model,'disc_grey_box') || strcmp(settings.mpc_model,'disc_black_box')
+                if strcmp(settings.mpc_model,'disc_black_box')
+                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\disc_blackbox'];
+                elseif strcmp(settings.mpc_model,'disc_grey_box')
+                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\disc_greybox'];
                 end
                 name = '';
                 X = readmatrix([gp_res_path,'\X',name,'.csv']);
@@ -105,9 +105,41 @@ function [input, data] = InitData(settings)
             input.x0 = [0;pi;0;0];
             input.u0 = zeros(nu,1);
             input.z0 = zeros(nz,1);
-            ode_flag = 1;
-            gp_flag = 1;
-            para0_ode = [1;0.1;0.8;ode_flag;gp_flag];
+
+            if strcmp(settings.mpc_model,'white_box_corr')
+                l_p = 0.5;
+            else
+                l_p = 0.8;
+            end
+
+            % GP params
+            if strcmp(settings.mpc_model,'cont_black_box')
+                gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\cont_blackbox'];
+                ode_flag = 0;
+                gp_flag = 1;
+            elseif strcmp(settings.mpc_model,'cont_grey_box')
+                gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\cont_greybox'];
+                ode_flag = 1;
+                gp_flag = 1;
+            else
+                gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\cont_greybox'];
+                ode_flag = 1;
+                gp_flag = 0;
+            end
+            name = '';
+            X = readmatrix([gp_res_path,'\X',name,'.csv']);
+            alpha_1 = readmatrix([gp_res_path,'\alpha_1',name,'.csv']);
+            l_1 = readmatrix([gp_res_path,'\l_1',name,'.csv'])';
+            alpha_2 = readmatrix([gp_res_path,'\alpha_2',name,'.csv']);
+            l_2 = readmatrix([gp_res_path,'\l_2',name,'.csv'])';
+
+            X_line = [];
+            for i =1:settings.xGP
+                X_line = [X_line;X(:,i)];
+            end
+            para0_GP = [X_line;alpha_1;l_1';alpha_2;l_2'];
+
+            para0_ode = [1;0.1;l_p;ode_flag;gp_flag];
 
             Q=repmat([10 10 0.1 0.1 0.01]',1,N);
             QN=[10 10 0.1 0.1]';
@@ -125,29 +157,6 @@ function [input, data] = InitData(settings)
             ub_g = [];
             lb_gN = [];
             ub_gN = [];
-
-            % GP params
-            if gp_flag
-%                 if strcmp(settings.mpc_model,'black_box')
-%                     gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\blackbox'];
-%                 else %strcmp(settings.mpc_model,'grey_box')
-                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\cont_greybox'];
-%                 end
-                name = '';
-                X = readmatrix([gp_res_path,'\X',name,'.csv']);
-                alpha_1 = readmatrix([gp_res_path,'\alpha_1',name,'.csv']);
-                l_1 = readmatrix([gp_res_path,'\l_1',name,'.csv'])';
-                alpha_2 = readmatrix([gp_res_path,'\alpha_2',name,'.csv']);
-                l_2 = readmatrix([gp_res_path,'\l_2',name,'.csv'])';
-                
-                X_line = [];
-                for i =1:settings.xGP
-                    X_line = [X_line;X(:,i)];
-                end
-                para0_GP = [X_line;alpha_1;l_1';alpha_2;l_2'];
-            else
-                para0_GP = zeros(settings.npGP,1);%[X_line;alpha_1;l_1';alpha_2;l_2'];
-            end
 
             para0 = [para0_ode;para0_GP];
 

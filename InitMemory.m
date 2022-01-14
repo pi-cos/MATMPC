@@ -519,10 +519,10 @@ function [mem] = InitMemory(settings, opt, input)
     
     %% GP
     
-    if strcmp(settings.mpc_model,'grey_box') || strcmp(settings.mpc_model,'black_box')
+    if strcmp(settings.mpc_model,'disc_grey_box') || strcmp(settings.mpc_model,'disc_black_box')
         
         if ~strcmp(opt.integrator,'ERK4-GP')
-            error('Please use ERK4-GP integrator for GP.')
+            error('Please use ERK4-GP integrator for discrete GP.')
         end
         
         mem.gp_flag = 1;
