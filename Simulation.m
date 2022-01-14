@@ -276,6 +276,7 @@ end
 
 %% save data for plots
 
-save(['data\sim_',num2str(opt.mpc_model)],'time','one_step_pred','state_sim','controls_MPC')
+% save(['data\sim_',num2str(opt.mpc_model)],'time','one_step_pred','state_sim','controls_MPC')
+save(['data\sim_',num2str(opt.mpc_model),'_gp',num2str(mem.gp_flag)],'time','one_step_pred','state_sim','controls_MPC')
 
     

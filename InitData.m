@@ -105,8 +105,8 @@ function [input, data] = InitData(settings)
             input.x0 = [0;pi;0;0];
             input.u0 = zeros(nu,1);
             input.z0 = zeros(nz,1);
-            ode_flag = 0;
-            gp_flag = 0;
+            ode_flag = 1;
+            gp_flag = 1;
             para0_ode = [1;0.1;0.8;ode_flag;gp_flag];
 
             Q=repmat([10 10 0.1 0.1 0.01]',1,N);
@@ -128,11 +128,11 @@ function [input, data] = InitData(settings)
 
             % GP params
             if gp_flag
-                if strcmp(settings.mpc_model,'black_box')
-                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\blackbox'];
-                else %strcmp(settings.mpc_model,'grey_box')
+%                 if strcmp(settings.mpc_model,'black_box')
+%                     gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\blackbox'];
+%                 else %strcmp(settings.mpc_model,'grey_box')
                     gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\greybox'];
-                end
+%                 end
                 name = '';
                 X = readmatrix([gp_res_path,'\X',name,'.csv']);
                 alpha_1 = readmatrix([gp_res_path,'\alpha_1',name,'.csv']);
