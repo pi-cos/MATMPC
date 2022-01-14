@@ -131,7 +131,7 @@ function [input, data] = InitData(settings)
 %                 if strcmp(settings.mpc_model,'black_box')
 %                     gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\blackbox'];
 %                 else %strcmp(settings.mpc_model,'grey_box')
-                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\greybox'];
+                    gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\cont_greybox'];
 %                 end
                 name = '';
                 X = readmatrix([gp_res_path,'\X',name,'.csv']);

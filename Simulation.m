@@ -72,7 +72,8 @@ opt.nonuniform_grid = 0; % if use non-uniform grid discretization (go to InitMem
 opt.RTI             = 'yes'; % if use Real-time Iteration
 
 opt.info_flag       = 0; % compute the equality residual (computationally expensive with GP - not useful in RTI)
-opt.mpc_model       = 'white_box_nom'; % model to be used in the QP generation % 'white_box_nom','white_box_corr','grey_box', 'black_box' 
+opt.mpc_model       = 'white_box_nom'; % model to be used in the QP generation 
+% 'white_box_nom','white_box_corr','disc_grey_box', 'disc_black_box', ''
 opt.gp_data_save    = 1; % save data for GP (only using white-box nominal model)
 if opt.gp_data_save
     opt.save_target     = 'grey_box'; % target for GPR (only if gp_data_save is active) % 'grey_box', 'black_box'
