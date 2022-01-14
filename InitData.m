@@ -105,7 +105,7 @@ function [input, data] = InitData(settings)
             input.x0 = [0;pi;0;0];
             input.u0 = zeros(nu,1);
             input.z0 = zeros(nz,1);
-            ode_flag = 1;
+            ode_flag = 0;
             gp_flag = 0;
             para0_ode = [1;0.1;0.8;ode_flag;gp_flag];
 
