@@ -118,7 +118,8 @@ function [input, data] = InitData(settings)
                 ode_flag = 0;
                 gp_flag = 1;
             elseif strcmp(settings.mpc_model,'cont_grey_box')
-                gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\cont_greybox'];
+%                 gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\cont_greybox'];
+                gp_res_path = [pwd,'\gp_regression\GPR_PY\results_GP_ID\cont_greybox_training_20points\results\1'];
                 ode_flag = 1;
                 gp_flag = 1;
             else

@@ -25,7 +25,8 @@ nbx = 1; % No. of bounds on states
 nbu = 1; % No. of bounds on controls
 
 % GP
-T = 200; %200 % No. of training points for the GP
+% T = 200; %200 % No. of training points for the GP
+T = 20; %200 % No. of training points for the GP
 xGP = 5; %5 % Dimension of training points for the GP
 yGP = 2; %2 % # of target of the GP
 npGP = T*xGP+yGP*(T+xGP); %X, ny*(alpha_i, l_i)
