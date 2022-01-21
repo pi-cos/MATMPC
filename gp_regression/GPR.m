@@ -5,8 +5,8 @@ restoredefaultpath; clear all; close all; clc;
 xGP = 5; % Dimension of training points for the GP
 yGP = 2; % # of target of the GP
 
-data_file = "cont_black_box_ip_sim"; % placed in GPR_PY/data     % cont_black_box_ip_sim, cont_grey_box_ip_sim, disc_black_box_ip_sim, disc_grey_box_ip_sim
-res_folder = "cont_blackbox"; % placed in GPR_PY/results_GP_ID/  % cont_blackbox, cont_greybox, disc_blackbox, disc_greybox
+data_file = "cont_black_box_fromVel_ip_sim"; % placed in GPR_PY/data     % cont_black_box_ip_sim, cont_grey_box_ip_sim, disc_black_box_ip_sim, disc_grey_box_ip_sim
+res_folder = "cont_blackbox_fromVel"; % placed in GPR_PY/results_GP_ID/  % cont_blackbox, cont_greybox, disc_blackbox, disc_greybox
 
 sigma_n = 0.05;
 

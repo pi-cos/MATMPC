@@ -74,10 +74,12 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 opt.info_flag       = 0; % compute the equality residual (computationally expensive with GP - not useful in RTI)
 opt.mpc_model       = 'cont_grey_box'; % model to be used in the QP generation 
 % 'white_box_nom','white_box_corr','disc_grey_box', 'disc_black_box', 'cont_grey_box', 'cont_black_box'
+% cont_grey_box_fromVel, cont_black_box_fromVel
 opt.gp_data_save    = 0; % save data for GP (only using white-box nominal model)
 if opt.gp_data_save
-    opt.save_target     = 'cont_grey_box'; % target for GPR (only if gp_data_save is active) 
-    % 'cont_grey_box', 'cont_black_box', 'disc_grey_box', 'disc_black_box'
+    opt.save_target     = 'cont_black_box_fromVel'; % target for GPR (only if gp_data_save is active) 
+    % 'cont_grey_box', 'cont_black_box', 'disc_grey_box', 'disc_black_box',
+    % 'cont_grey_box_fromVel', 'cont_black_box_fromVel' 
 end
 
 %% available qpsolver

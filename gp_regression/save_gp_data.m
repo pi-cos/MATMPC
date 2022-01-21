@@ -47,7 +47,15 @@ elseif strcmp(settings.gp_generation,'continuous')
         y = [acc_true(:,1),acc_true(:,2)];
     elseif strcmp(opt.save_target,'cont_grey_box')
         y = [acc_true(:,1)-acc_pred(:,1),acc_true(:,2)-acc_pred(:,2)];
-        else
+    elseif strcmp(opt.save_target,'cont_grey_box_fromVel')
+        acc_1_true_from_vel = diff(state_sim(:,3))/Ts;
+        acc_2_true_from_vel = diff(state_sim(:,4))/Ts;
+        y = [acc_1_true_from_vel-acc_pred(:,1),acc_2_true_from_vel-acc_pred(:,2)];
+    elseif strcmp(opt.save_target,'cont_black_box_fromVel')
+        acc_1_true_from_vel = diff(state_sim(:,3))/Ts;
+        acc_2_true_from_vel = diff(state_sim(:,4))/Ts;
+        y = [acc_1_true_from_vel,acc_2_true_from_vel];
+    else
         error('Chosse correct saving options.')
     end
 
