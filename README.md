@@ -1,4 +1,28 @@
-# MATMPC
+# MATMPC-C
+
+## C implementation of MATMPC
+
+This tool aims at providing an easy-to-use NMPC implementation, based on MATMPC (https://github.com/chenyutao36/MATMPC) and hpipm (https://github.com/giaf/hpipm). The peculiar feature is that it is based on MATLAB-based MATMPC, in order to ease the prototyping and debugging, and allows to easily deploy the code from the MATLAB generated files.
+
+## To use MATMPC-C, follow the steps below.
+
+Once the NMPC controller has been developed and tested in MATMPC, it is possible to test the c implementation by:
+Within MATMPC-C folder:
+
+1. set all the MACROS in include/mpc_set.h
+
+2. initialize the system in src/mpc_fcn.c -> initInput() function
+
+3. set your simulation parameters in src/main
+
+4. copy into src the file 'casadi_src.c' from MATMPC-MATLAB/mex_core
+
+5. run the matmpc_c executable
+
+
+To verify the results copy the file 'sim_results.csv' from csv folder into MATMPC-MATLAB/data and compare the obtained results launching MATMPC-MATLAB/draw_from_csv.m in MATLAB.
+
+
 ## MATMPC: MATLAB based nonlinear MPC tool
 
 This tool aims at providing an easy-to-use nonlinear MPC implementation. The optimal control problem (OCP) that should be solved is transcribed by multiple shooting and the resulting nonlinear program (NLP) is solved by Sequential Quadratic Programming (SQP) method.
