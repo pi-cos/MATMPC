@@ -4,7 +4,7 @@
 
 This tool aims at providing an easy-to-use NMPC implementation, based on MATMPC (https://github.com/chenyutao36/MATMPC) and hpipm (https://github.com/giaf/hpipm). The peculiar feature is that it is based on MATLAB-based MATMPC, in order to ease the prototyping and debugging, and allows to easily deploy the code from the MATLAB generated files.
 
-### To use MATMPC-C, follow the steps below.
+### MATMPC-C usage
 
 Once the NMPC controller has been developed and tested in MATMPC, it is possible to test the c implementation by:
 Within MATMPC-C folder:
