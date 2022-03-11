@@ -17,8 +17,16 @@ Within MATMPC-C folder:
 
 4. copy into src the file 'casadi_src.c' from MATMPC-MATLAB/mex_core
 
-5. run the matmpc_c executable
 
+## To build and run
+
+To build, run the following commands in the terminal:
+
+1. cd build
+2. cmake ..
+3. cmake --build .
+
+Run the executable by typing ./matmpc_c
 
 To verify the results copy the file 'sim_results.csv' from csv folder into MATMPC-MATLAB/data and compare the obtained results launching MATMPC-MATLAB/draw_from_csv.m in MATLAB.
 
