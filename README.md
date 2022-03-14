@@ -30,6 +30,8 @@ Run the executable by typing ./matmpc_c
 
 To verify the results copy the file 'sim_results.csv' from csv folder into MATMPC-MATLAB/data and compare the obtained results launching MATMPC-MATLAB/draw_from_csv.m in MATLAB.
 
+Note that the code relies on the OpenBLAS implementation for linear algebra operations, hence the OpenBLAS library (https://github.com/xianyi/OpenBLAS/wiki/User-Manual) is needed to correctly compile the project.
+
 
 ## MATMPC: MATLAB based nonlinear MPC tool
 
