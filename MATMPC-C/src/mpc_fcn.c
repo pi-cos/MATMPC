@@ -31,7 +31,7 @@ void initSettings(TypeSettings *settings){
 void initInput(TypeInput *input){
     /* USER DEFINED INITIALIZATION */
     // input.x0: to be read from a configuration file!
-    double x0[NX] = {0, 3.14, 0, 0};
+    double x0[NX] = {0, 3.1416, 0, 0};
     setArrayDoubleValues(input->x0,x0,NX);
     // input.u0:  to be read from a configuration file!
     double u0[NU] = {0};
@@ -135,10 +135,10 @@ void initMem(TypeMem *mem){
 
     // solver initialization (see opt.qpsolver) IMPLEMENTED FOR HPIPM_SPARSE
     mem->mu0 = 1.0e4;
-    mem->max_qp_it = 1e3;
+    mem->max_qp_it = 30;
     mem->pred_corr = 1;
     mem->cond_pred_corr = 1;
-    mem->solver_mode = 3;
+    mem->solver_mode = 1;
 
     // hessian setting IMPLEMENTED FOR GAUSS_NEWTON (see opt.hessian)
     mem->hessian = 0;
@@ -154,7 +154,7 @@ void initMem(TypeMem *mem){
                           0,   0,   0,  1,
                           0,  0,   0,  0};
     setArrayDoubleValues(mem->A_tab,A_tab,16);
-    printf("Check row/column major for A_tab! Now it is column-major (as it seems to be Blasfeo). \n");
+    //printf("Check row/column major for A_tab! Now it is column-major (as it seems to be Blasfeo). \n");
     double B_tab[4] = {1.0/6, 1.0/3, 1.0/3, 1.0/6};
     setArrayDoubleValues(mem->B_tab,B_tab,4);
     mem->num_steps = 2;
@@ -175,8 +175,8 @@ void initMem(TypeMem *mem){
 
     // globalization
     mem->mu_merit = 0,
-    mem->eta = 1.0e-8;
-    mem->tau = 0.5;
+    mem->eta = 1.0e-4;
+    mem->tau = 0.8;
     mem->mu_safty = 1.1;
     mem->rho = 0.5;
     mem->alpha = 1;
@@ -258,7 +258,7 @@ void initMem(TypeMem *mem){
         mem->Cx[(nbx_idx[i]-1)*NBX+i]=1;
     }
 
-    mem->reg = 1.0e-4;
+    mem->reg = 1.0e-8;
     double Q[NX*NX*(NS+1)] = {0};
     setArrayDoubleValues(mem->Q ,Q,NX*NX*(NS+1));
     double S[NX*NU*NS] = {0};

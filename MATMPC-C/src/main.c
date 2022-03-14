@@ -31,7 +31,8 @@ int main() {
     int sim_length = 160;
     double state_sim[sim_length+1][settings.nx];
     setArrayDoubleValues(state_sim[0],input.x0,settings.nx);
-    double input_sim[sim_length][settings.nu];
+    double input_sim[sim_length+1][settings.nu];
+    setArrayDoubleValues(input_sim[0],input.u0,settings.nu);
 
     mem.iter = 1;
     int result = simulation_loop(&input,&mem,&settings,sim_length,ref,state_sim,input_sim);
@@ -93,7 +94,7 @@ int simulation_loop(TypeInput *input, TypeMem *mem, TypeSettings *settings, int 
         // evolve state and save everything
         mem->iter++;
         setArrayDoubleValues(state_sim[i+1],sim_output.x,settings->nx);
-        setArrayDoubleValues(input_sim[i],sim_input.u,settings->nu);
+        setArrayDoubleValues(input_sim[i+1],sim_input.u,settings->nu);
 
         if (result_nmpc != 1) {
             result_sl = -1;
@@ -154,14 +155,14 @@ void write_results(int nx, int steps, double state_sim[steps+1][nx], int nu, dou
         for (int j=0; j<nx;j++){
             fprintf(fpt,"%f ", state_sim[i][j]);
         }
-        if (i<steps) {
+//        if (i<steps) {
             for (int j = 0; j<nu-1; j++) {
                 fprintf(fpt, "%f ", input_sim[i][j]);
             }
             fprintf(fpt,"%f\n", input_sim[i][nu-1]);
-        }
-        else
-            fprintf(fpt,"\n");
+//        }
+//        else
+//            fprintf(fpt,"\n");
     }
     fclose(fpt);
 };

@@ -33,5 +33,24 @@ subplot(3,2,[5 6]);
 title('F');
 hold on
 grid on
-stairs(c_t(2:end),c_sim_res.u(1:end-1),'--');
+stairs(c_t,c_sim_res.u,'--');
 legend('matlab','c implementation')
+
+%% plot difference
+
+figure(2);
+subplot(321)
+plot(time,state_sim(:,1)-c_sim_res.p);
+title('p');
+subplot(322)
+plot(time,(state_sim(:,2)-c_sim_res.theta)*180/pi);
+title('\theta');
+subplot(323)
+plot(time,state_sim(:,3)-c_sim_res.v);
+title('v');
+subplot(324)
+plot(time,(state_sim(:,4)-c_sim_res.omega)*180/pi);
+title('\omega');
+subplot(3,2,[5 6]);
+title('F');
+stairs(time,controls_MPC-c_sim_res.u);
