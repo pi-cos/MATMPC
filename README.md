@@ -3,6 +3,8 @@
 
 This tool aims at providing an easy-to-use nonlinear MPC implementation of GP-based grey- or black-box modelling. The tool is based on MATMPC, which is an open-source NMPC tool available at https://github.com/chenyutao36/MATMPC. The optimal control problem (OCP) that should be solved is transcribed by multiple shooting and the resulting nonlinear program (NLP) is solved by Sequential Quadratic Programming (SQP) method.
 
+Details on the problem formulation and usage can be found in the documentation (under doc folder).
+
 ## MATMPC
 
 The tool supports fixed step (explicit/implicit) Runge-Kutta (RK) integrator for multiple shooting. The derivatives that are needed to perform optimization are obtained by CasADi (https://github.com/casadi/casadi/wiki), the state-of-the-art automatic/algorithmic differentiation toolbox. The Quadratic Programming (QP) problems can be solved by both dense and sparse solvers. By now, MATMPC supports interfaces with the following external solvers: qpOASES (https://projects.coin-or.org/qpOASES/wiki/QpoasesInstallation), Ipopt (https://projects.coin-or.org/Ipopt), hpipm (https://github.com/giaf/hpipm), osqp (https://osqp.org/) and qpalm (https://github.com/Benny44/QPALM).
