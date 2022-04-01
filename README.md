@@ -1,7 +1,11 @@
-# MATMPC
-## MATMPC: MATLAB based nonlinear MPC tool
+# LbMATMPC
+## LbMATMPC: a MATLAB based nonlinear MPC tool for GP-based grey- or black-box modelling
 
-This tool aims at providing an easy-to-use nonlinear MPC implementation. The optimal control problem (OCP) that should be solved is transcribed by multiple shooting and the resulting nonlinear program (NLP) is solved by Sequential Quadratic Programming (SQP) method.
+This tool aims at providing an easy-to-use nonlinear MPC implementation of GP-based grey- or black-box modelling. The tool is based on MATMPC, which is an open-source NMPC tool available at https://github.com/chenyutao36/MATMPC. The optimal control problem (OCP) that should be solved is transcribed by multiple shooting and the resulting nonlinear program (NLP) is solved by Sequential Quadratic Programming (SQP) method.
+
+Details on the problem formulation and usage can be found in the documentation (under doc folder).
+
+## MATMPC
 
 The tool supports fixed step (explicit/implicit) Runge-Kutta (RK) integrator for multiple shooting. The derivatives that are needed to perform optimization are obtained by CasADi (https://github.com/casadi/casadi/wiki), the state-of-the-art automatic/algorithmic differentiation toolbox. The Quadratic Programming (QP) problems can be solved by both dense and sparse solvers. By now, MATMPC supports interfaces with the following external solvers: qpOASES (https://projects.coin-or.org/qpOASES/wiki/QpoasesInstallation), Ipopt (https://projects.coin-or.org/Ipopt), hpipm (https://github.com/giaf/hpipm), osqp (https://osqp.org/) and qpalm (https://github.com/Benny44/QPALM).
 
@@ -39,6 +43,12 @@ Install Xcode from app store
 
 6. In Simulation.m, choose your integrator, set the prediction horizon and the solver options. You may also need to modify the reference type for constant or time-varying reference tracking problems.
 
+##
+
 7. In Draw.m, write your own plot functions to display your results.
 
 8. Run Simulation.m and see the results!
+
+## Learning-based MATMPC
+
+The tool allows to use in MATLAB the gpr-pytorch libraries for Gaussian Process Regression, and allows to easily use the obtained GP to improve or define the modelling within the NMPC. See documentation for details.
