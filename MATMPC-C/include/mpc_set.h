@@ -1,7 +1,7 @@
 #ifndef MPC_SET_H_
 #define MPC_SET_H_
 
-#define MODEL_NAME "GoKartSpace" // Name of the compiled model from Matlab
+#define MODEL_NAME "InvertedPendulum" // Name of the compiled model from Matlab
 
 #define NS 80 // No. of shooting points
 #define NS2 10 // No. of horizon length after partial condensing (if used)

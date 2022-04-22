@@ -60,14 +60,14 @@ void initInput(TypeInput *input){
 
     /* AUTOMATIC INITIALIZATION */
     // general constraints
-    double lb[NC*(NS+1)];
-    repeatDoubleArray(lb_g, lb, NC, NC*NS);
+    double lb[NC*NS+NCN];
+    repeatDoubleArray(lb_g, lb, NC, NC*NS+NCN);
     repeatDoubleArray(lb_gN, &lb[NC*NS], NCN, NCN);
-    setArrayDoubleValues(input->lb,lb,NC*(NS+1));
-    double ub[NC*(NS+1)];
-    repeatDoubleArray(ub_g, ub, NC, NC*NS);
+    setArrayDoubleValues(input->lb,lb,NC*NS+NCN);
+    double ub[NC*NS+NCN];
+    repeatDoubleArray(ub_g, ub, NC, NC*NS+NCN);
     repeatDoubleArray(ub_gN, &ub[NC*NS], NCN, NCN);
-    setArrayDoubleValues(input->ub,ub,NC*(NS+1));
+    setArrayDoubleValues(input->ub,ub,NC*NS+NCN);
     // input constraints
     double lbu_0[NU]  = {};
     double ubu_0[NU]  = {};
@@ -174,7 +174,7 @@ void initMem(TypeMem *mem){
     mem->kkt_lim = 1.0e-2;
 
     // globalization
-    mem->mu_merit = 0,
+    mem->mu_merit = 0;
     mem->eta = 1.0e-4;
     mem->tau = 0.8;
     mem->mu_safty = 1.1;
