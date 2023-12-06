@@ -6,6 +6,8 @@ OS_MAC = 0;
 OS_LINUX = 0;
 OS_WIN = 0;
 
+gcc_version = 'n';
+
 if ismac
     OS_MAC = 1;
     addpath(genpath('../solver/mac'));
